@@ -41,9 +41,14 @@ capacity when sizing disks against ZFS-backed Proxmox storage.
 
 ## CPU / memory
 
-- Memory: 30720 MiB dedicated, no ballooning (`floating` unset/0) — a
-  static reservation, not a dynamic balloon split, leaving 2 GiB for `pve`
-  itself. Decided previously (see [[project_jellyfin_vm]]).
+- Memory: 24576 MiB dedicated (was 30720), no ballooning (`floating`
+  unset/0) — a static reservation, not a dynamic balloon split. The
+  original 30720 (leaving 2 GiB for `pve`) failed on the real apply: the
+  host's OOM killer killed the VM's QEMU process outright
+  (`Out of memory: Killed process ... (kvm)`) once actually running, since
+  2 GiB wasn't enough real headroom for host services plus ZFS ARC across
+  both pools under load. 24576 leaves ~7-8 GiB of real headroom on the
+  32 GiB host.
 - CPU: all 4 cores/threads (`cpu.cores = 4`), `type = "host"` for best
   passthrough compatibility with `intel-igpu`. Not explicitly discussed
   with the user — CPU isn't statically partitioned like memory, so
