@@ -5,6 +5,10 @@
 `Settings` → `Branches` → `Add branch protection rule` (pattern: `main`)
 
 - Require a pull request before merging
+- Required approving reviews: **0** — GitHub blocks self-approval, and this
+  is a solo-maintainer repo, so requiring someone else's approval would
+  permanently block every merge. The PR-required gate plus required status
+  checks are the actual review mechanism.
 - Disallow force pushes
 - Disallow deletions
 

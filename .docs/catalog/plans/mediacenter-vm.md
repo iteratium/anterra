@@ -24,12 +24,20 @@ One disk per storage pool, not a separate downloads-scratch disk:
   folders on this same disk, not a separate virtual disk — user's explicit
   call, overriding the earlier plan (see [[project_jellyfin_vm]]) of a
   second fast-store disk.
-- `bulk-store` (mirrored HDD): one new disk (`scsi1`), 4500 GB — most of
-  the ~4.55 TiB mirror capacity, same headroom reasoning, for the Jellyfin
-  media library.
+- `bulk-store` (mirrored HDD): one new disk (`scsi1`), 4300 GB (was 4500,
+  see below) — for the Jellyfin media library.
 
 Both sizes are `terraform/modules/mediacenter/variables.tf` defaults
 (`os_disk_size_gb`, `media_disk_size_gb`), not hardcoded in the resource.
+
+**4500 GB failed on the real apply** — `zfs error: cannot create
+'bulk-store/vm-100-disk-0': out of space`. `zpool list` reported 4.55T free,
+but that's pool-wide free space before ZFS's slop-space reservation
+(~1/32 of pool size, ~130GB here); `zfs list`'s `AVAIL` column (4.42 TiB /
+4526 GiB) is the real ceiling for new zvols, and zvol creation has its own
+overhead on top of the raw `size`. Dropped to 4300 GB for real margin.
+Lesson: check `zfs list <pool>` (not `zpool list`) for actual available
+capacity when sizing disks against ZFS-backed Proxmox storage.
 
 ## CPU / memory
 
