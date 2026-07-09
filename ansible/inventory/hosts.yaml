@@ -3,8 +3,8 @@ all:
   children:
     servers:
       hosts:
-        rpi:
         pve:
+        rpi:
         vps:
     vms:
       hosts:

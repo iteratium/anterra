@@ -1,0 +1,8 @@
+---
+- name: Fleet connectivity check
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Ping
+      ansible.builtin.ping:
+...
