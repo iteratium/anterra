@@ -1,0 +1,11 @@
+---
+all:
+  children:
+    servers:
+      hosts:
+        rpi:
+        pve:
+        vps:
+    vms:
+      hosts:
+...
