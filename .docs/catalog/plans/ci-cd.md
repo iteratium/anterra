@@ -2,7 +2,10 @@
 
 Decisions made during setup planning, ahead of actually building the automation
 (see repo phase: manual host setup first, automation build-out later — this
-doc records design, no workflow files exist yet).
+doc records design). The Terraform plan/apply workflows now exist
+(`.github/workflows/terraform-plan.yml`, `terraform-apply.yml`); Ansible's
+`site.yml` workflow does not yet. See `plans/mediacenter-vm.md` for the
+implementation notes and remaining manual steps for the Terraform side.
 
 **Terraform, not OpenTofu.** Old repo used OpenTofu; v2 uses actual Terraform
 (the `terraform/` directory name already reflects this). Relevant here since
@@ -24,12 +27,14 @@ it changes which CLI/setup-action the workflow uses (`hashicorp/setup-terraform`
   without hunting down a leaked key. Stored as `TS_OAUTH_CLIENT_ID` /
   `TS_OAUTH_CLIENT_SECRET` in GitHub Actions secrets.
 
-## ACL change required (not yet made)
+## ACL change (done)
 
-The ephemeral runner needs its own tag, e.g. `tag:ci-runner`, added as a `src`
-alongside `group:fleet-admins` in the SSH accept rule in the tailnet policy
-(see `tailscale.md`), so it can Tailscale-SSH into `pve`/`rpi`/`vps`. `dst`
-stays as-is (`autogroup:self` + `tag:peer-relay`).
+The ephemeral runner joins as `tag:ci-runner`, with its own `ssh` rule
+(couldn't share the `group:fleet-admins` rule — `autogroup:self` in `dst`
+only works when `src` is exclusively users/groups). `pve`/`rpi` were tagged
+`tag:fleet-host` so the runner's rule can reach them. See `setup/tailscale.md`
+(`tag:ci-runner and tag:fleet-host` section) for the full policy and
+reasoning.
 
 ## Secrets
 

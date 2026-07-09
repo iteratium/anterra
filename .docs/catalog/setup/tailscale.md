@@ -15,6 +15,12 @@ Default tailnet policy puts Tailscale SSH in `check` mode (12h browser re-auth).
 			"users":  ["autogroup:nonroot", "root"],
 			"action": "accept",
 		},
+		{
+			"src":    ["tag:ci-runner"],
+			"dst":    ["tag:fleet-host", "tag:mediacenter", "tag:peer-relay"],
+			"users":  ["autogroup:nonroot", "root"],
+			"action": "accept",
+		},
 	],
 
 	"nodeAttrs": [
@@ -28,6 +34,7 @@ Default tailnet policy puts Tailscale SSH in `check` mode (12h browser re-auth).
 		"tag:peer-relay":  ["group:fleet-admins"],
 		"tag:mediacenter": ["group:fleet-admins"],
 		"tag:ci-runner":   ["group:fleet-admins"],
+		"tag:fleet-host":  ["group:fleet-admins"],
 	},
 
 	"grants": [
@@ -60,6 +67,26 @@ Added in both places `tag:peer-relay` appears:
 - `tagOwners`: `"tag:mediacenter": ["group:fleet-admins"]`
 - SSH `dst`: `["autogroup:self", "tag:peer-relay", "tag:mediacenter"]` — needed so `group:fleet-admins` can Tailscale-SSH into it for ops/Ansible, same as the other fleet hosts.
 
+
+## `tag:ci-runner` and `tag:fleet-host`
+
+The ephemeral GitHub Actions runner (see `plans/ci-cd.md`) needs to
+Tailscale-SSH into `pve`/`rpi`/`vps` to run Terraform (snippet upload) and
+Ansible. It joins the tailnet as `tag:ci-runner`, tag-owned like
+`tag:peer-relay`/`tag:mediacenter`.
+
+This needs its own `ssh` rule, separate from the `group:fleet-admins` one:
+Tailscale only allows `autogroup:self` in `dst` when `src` is exclusively
+users/groups, and only allows a bare hostname/named-user `dst` when `src` is
+that same user — a tag-based `src` can't use either. `pve` and `rpi` are
+user-owned (not tag-owned), so there was no way to name them as `dst` in a
+tag-sourced rule.
+
+Fix: tag `pve` and `rpi` themselves with a new tag, `tag:fleet-host`, so the
+`tag:ci-runner` rule can reach them via `dst: ["tag:fleet-host", ...]`
+instead of `autogroup:self`. Applied per-device in the admin console
+(**Machines** → device → **…** → **Edit ACL tags**), not via `tailscale up`
+on the device itself.
 
 ## Key expiry
 

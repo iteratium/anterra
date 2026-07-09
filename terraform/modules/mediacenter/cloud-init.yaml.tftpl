@@ -1,0 +1,10 @@
+#cloud-config
+hostname: ${hostname}
+package_update: true
+package_upgrade: true
+packages:
+  - qemu-guest-agent
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --ssh --authkey=${tailscale_auth_key} --advertise-tags=tag:mediacenter --accept-routes=false
