@@ -1,63 +1,43 @@
 # Anterra
 
-IaC, state, and docs for a 3-site home server (India compute · Singapore
-gateway · Japan clients), Tailscale-bridged. This repo is a **clean rewrite**
-of the previous `anterra` repo (https://github.com/N28M/anterra, now under
-`home-server/anterra/` on this machine) — not a fork or migration. Treat that
-old repo as historical reference only; don't port/copy its playbooks, Terraform
-modules, Portainer stacks, or vault secrets into this one.
+This repo is a clean rewrite of the previous anterra repo (https://github.com/N28M/anterra)
 
-**Reused from the old setup**: only the physical/virtual machines and their
-already-installed OS — `pve` (Dell OptiPlex 7060 Micro, India), `rpi`
-(Raspberry Pi 4B, India), `vps` (GreenCloud EPYCSGDC1-1, Singapore). All three
-are remote, so "fresh start" means the guest/config layer, not bare metal.
-Everything else (Ansible, Terraform, CI, docs) starts from scratch here.
+# Documentation
 
-## Docs map
+Documentation stored in .docs
+- `.docs/catalog/servers.md` - Inventory
+- `.docs/catalog/setup` - Initial state setup documents. 
+- `.docs/catalog/plans` - Planned changes, discussions etc.
 
-- `.docs/catalog/servers.md` — fleet inventory (physical + virtual hosts by
-  site). Intentionally has no "clients" section — Japan clients are out of
-  scope for this catalog.
-- `.docs/catalog/setup/{pve,rpi,vps}.md` — manual, one-time per-host setup
-  steps completed so far (ZFS pools, Tailscale `up` invocations and their
-  host-specific gotchas). Read before assuming a host's state.
-- `.docs/catalog/setup/tailscale.md` — fleet-wide Tailscale ACL policy (SSH
-  access via `group:fleet-admins`, `tag:peer-relay` for `vps`,
-  `tag:mediacenter` for the new Terraform-created `pve` VM, key-expiry
-  decision). Not duplicated per host.
-- `.docs/catalog/ci-cd.md` — the planned CI/CD design (not yet built): no
-  control node, GitHub-hosted runners joining the tailnet ephemerally,
-  GitHub Actions secrets only (no Bitwarden/vault), HCP Terraform (Terraform
-  Cloud) for state, single `site.yml` Ansible entrypoint, auto-plan/check on
-  PR with approval-gated apply on merge, GitHub Flow branching. Read this in
-  full before discussing or building automation — it has the reasoning
-  behind each choice, not just the choice.
-- `.docs/catalog/terraform.md` — external setup completed for the Terraform
-  side specifically: HCP Terraform org/project/workspace, provider choices
-  and why, and the GitHub Actions secrets they depend on. Read before
-  writing or changing anything under `terraform/`.
+# Infrastructure
 
-## Key fleet facts worth knowing up front
+- Dell Optiplex 7060 Micro (pve)
+- Raspberry Pi 4B (rpi)
+- GreenCloud EPYCSGDC1-1 (vps)
 
-- `vps` is a Tailscale **Peer Relay** and is **tag-owned** (`tag:peer-relay`),
-  not user-owned — ACL rules scoped to `autogroup:self` don't reach it.
-- `rpi` is the India LAN's subnet router (`10.0.0.0/22`) and exit node.
-  Any host directly on that LAN (`pve`) must run
-  `tailscale up --accept-routes=false` explicitly, or it will accept `rpi`'s
-  advertised route and break its own local LAN reachability.
-- Tailscale key expiry is disabled for `pve`, `rpi`, `vps` — Tailscale SSH is
-  the primary access path, so an expired key means total lockout with no
-  fallback.
-- VMs created via Terraform (e.g. the new `pve` media-center VM) join the
-  tailnet non-interactively — a Tailscale OAuth client mints a fresh,
-  immediately-consumed auth key per `apply` (see `terraform.md`), not the
-  manual `tailscale up` used for `pve`/`rpi`/`vps` themselves.
+# Facts
+
+- The intention is for all changes to go through GitHub Actions for managing and deploying services to our infrastructure.
+- SSH config on this machine allows direct ssh access to rpi, pve and vps. This ssh access can be used by claude or the user.
+- Tailscale SSH has also been set up on all the servers.
+- This repo is public. Never commit secrets, internal hostnames/IPs, or anything sensitive.
 
 ## Working conventions
 
-- Never let secrets (tokens, passwords) pass through chat or a tool-call
-  transcript — have the user enter them directly in their own terminal.
+- Never let secrets (tokens, passwords) pass through chat or a tool-call transcript — have the user enter them directly in their own terminal.
 - No emoji in documentation, code, or commits.
-- Don't run state-changing commands (`tailscale up` with role-affecting
-  flags, and eventually `terraform apply` / `ansible-playbook`) without
-  explicit permission. Read-only inspection is always fine.
+- Don't run state-changing commands (`tailscale up` with role-affecting flags, and eventually `terraform apply` / `ansible-playbook`) without explicit permission. Read-only inspection is always fine.
+- Create a topic branch for changes; don't commit directly to `main`.
+- Keep discussion and documentation terse. State facts and decisions plainly; skip preamble, restatement, and "why" explanations unless the reasoning is non-obvious.
+
+## Secrets
+
+All secrets stored exclusively on Github Secrets
+
+| Secret | Purpose |
+|---|---|
+| `PROXMOX_API_TOKEN_ID` | `terraform@pve!terraform-gh` — Proxmox provider auth |
+| `PROXMOX_API_TOKEN_SECRET` | Proxmox provider auth |
+| `TF_API_TOKEN` | HCP Terraform team token — backend auth |
+| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client — mints the VM's join key |
+| `TS_OAUTH_CLIENT_SECRET` | Tailscale OAuth client — mints the VM's join key |
