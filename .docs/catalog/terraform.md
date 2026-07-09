@@ -34,6 +34,10 @@ the repo but that Terraform depends on.
   keys have a hard 90-day expiry cap; generating one at apply-time and
   consuming it immediately avoids a recurring manual-rotation task.
 
+Version pins to use once `terraform/` is scaffolded (current as of this
+writing — check for newer before pinning if significant time has passed):
+`bpg/proxmox` v0.111.1, `tailscale/tailscale` v0.29.2.
+
 ## Proxmox
 
 See `setup/pve.md` for the full detail: `terraform@pve` user, scoped
