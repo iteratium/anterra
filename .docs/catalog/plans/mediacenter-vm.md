@@ -42,7 +42,7 @@ Both sizes are `terraform/modules/mediacenter/variables.tf` defaults
   allocating all cores to the only VM on the host is a low-risk default,
   unlike the disk-size question.
 
-## SSH access from Terraform to `pve` (untested assumption)
+## SSH access from Terraform to `pve` (still untested)
 
 Cloud-init `user_data_file_id` requires uploading a snippet file, and the
 `bpg/proxmox` provider only supports snippet upload over SSH (not the
@@ -59,11 +59,35 @@ the client-offered key. The Go SSH client HashiCorp's provider uses still
 needs *some* auth method configured to attempt the handshake, hence the
 throwaway key — its content is never actually checked.
 
-This chain hasn't been exercised end-to-end yet. If the first real
-`terraform plan`/`apply` run fails at the snippet-upload step, the likely
-fix is switching to a real persisted keypair (public key in `pve`'s
-`~/.ssh/authorized_keys`, private key as a new GitHub Actions secret)
-rather than the ephemeral-key approach.
+This still hasn't been exercised — the first PR's plan run never got past
+the runner joining the tailnet (see next section). If it fails at the
+snippet-upload step once that's fixed, the likely fallback is a real
+persisted keypair (public key in `pve`'s `~/.ssh/authorized_keys`, private
+key as a new GitHub Actions secret) instead of the ephemeral-key approach.
+
+## First plan run failure: OAuth client scoped to 2 tags
+
+The first PR's `terraform-plan` run failed before Terraform even started —
+`tailscale/github-action` couldn't bring the runner up:
+`Status: 400, Message: "requested tags [tag:ci-runner] are invalid or not
+permitted"`.
+
+Root cause: `TS_OAUTH_CLIENT_ID`/`SECRET` was originally one OAuth client
+scoped to both `tag:mediacenter` and `tag:ci-runner`. Tailscale has a bug
+where an OAuth client scoped to 2+ tags rejects a request for only a subset
+of them — see
+[tailscale/terraform-provider-tailscale#437](https://github.com/tailscale/terraform-provider-tailscale/issues/437).
+Neither caller here ever requests both tags together (the GitHub Action
+requests `tag:ci-runner` only; Terraform's `tailscale_tailnet_key` requests
+`tag:mediacenter` only), so it always hit the bug.
+
+Fixed by splitting into two single-tag OAuth clients: `TS_OAUTH_CLIENT_ID`/
+`SECRET` now scoped to `tag:ci-runner` only, and a new
+`TS_OAUTH_MEDIACENTER_CLIENT_ID`/`SECRET` scoped to `tag:mediacenter` only.
+Both workflows updated so the `tailscale/github-action` step uses the
+former and the `TAILSCALE_OAUTH_CLIENT_ID`/`SECRET` env vars (Terraform's
+own provider auth) use the latter. See `setup/tailscale.md`
+(`OAuth clients` section).
 
 ## Remaining manual steps
 

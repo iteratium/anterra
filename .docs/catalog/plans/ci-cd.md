@@ -25,7 +25,11 @@ it changes which CLI/setup-action the workflow uses (`hashicorp/setup-terraform`
   the tailnet device list).
 - Auth: a Tailscale **OAuth client** (not a static authkey) — scoped, revocable
   without hunting down a leaked key. Stored as `TS_OAUTH_CLIENT_ID` /
-  `TS_OAUTH_CLIENT_SECRET` in GitHub Actions secrets.
+  `TS_OAUTH_CLIENT_SECRET` in GitHub Actions secrets, scoped only to
+  `tag:ci-runner` — separate from the `tag:mediacenter`-scoped client
+  Terraform itself uses (`TS_OAUTH_MEDIACENTER_CLIENT_ID`/`SECRET`), see
+  `setup/tailscale.md` (`OAuth clients` section) for why they can't share
+  one client.
 
 ## ACL change (done)
 
@@ -112,8 +116,9 @@ the PR comes from a topic branch or a `dev` branch — so `dev` would just add
 an extra merge hop with nothing to isolate.
 
 **Branch protection on `main`**: require the plan/check workflow to pass as
-a required status check before merge is allowed. Not yet configured on
-GitHub — to be set up when the automation build-out phase starts.
+a required status check before merge is allowed. Configured for the
+Terraform `plan` check (see `setup/github.md`); add the Ansible check job
+too once that workflow exists.
 
 ## Full change process
 

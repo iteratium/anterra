@@ -88,6 +88,26 @@ instead of `autogroup:self`. Applied per-device in the admin console
 (**Machines** → device → **…** → **Edit ACL tags**), not via `tailscale up`
 on the device itself.
 
+## OAuth clients
+
+Two separate single-tag OAuth clients, not one client scoped to both tags:
+
+- One scoped to `tag:ci-runner` only (Auth Keys: Write) — used by
+  `tailscale/github-action` in both workflows to join the runner itself to
+  the tailnet. Secrets: `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_CLIENT_SECRET`.
+- One scoped to `tag:mediacenter` only (Auth Keys: Write) — used by
+  Terraform's `tailscale` provider (`TAILSCALE_OAUTH_CLIENT_ID`/`SECRET` env
+  vars) to mint the VM's join key via `tailscale_tailnet_key`. Secrets:
+  `TS_OAUTH_MEDIACENTER_CLIENT_ID` / `TS_OAUTH_MEDIACENTER_CLIENT_SECRET`.
+
+Originally one client covered both tags, since both uses were assumed to
+share credentials the same way the ssh-rule tags do. Hit a real Tailscale
+bug: an OAuth client scoped to 2+ tags rejects any request that asks for
+only a subset of them (`"requested tags [tag:X] are invalid or not
+permitted"`), and neither caller here ever requests both tags at once. See
+[tailscale/terraform-provider-tailscale#437](https://github.com/tailscale/terraform-provider-tailscale/issues/437).
+Splitting into two single-tag clients avoids it.
+
 ## Key expiry
 
 **Disabled** for `pve`, `rpi`, and `vps` (per-node setting in the admin console, Machines list). With Tailscale SSH as the access path, an expired node key means total lockout.
