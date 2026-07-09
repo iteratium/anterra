@@ -8,7 +8,7 @@ old repo as historical reference only; don't port/copy its playbooks, Terraform
 modules, Portainer stacks, or vault secrets into this one.
 
 **Reused from the old setup**: only the physical/virtual machines and their
-already-installed OS — `pve` (Dell Optiplex 3060 Micro, India), `rpi`
+already-installed OS — `pve` (Dell OptiPlex 7060 Micro, India), `rpi`
 (Raspberry Pi 4B, India), `vps` (GreenCloud EPYCSGDC1-1, Singapore). All three
 are remote, so "fresh start" means the guest/config layer, not bare metal.
 Everything else (Ansible, Terraform, CI, docs) starts from scratch here.

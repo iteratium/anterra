@@ -40,3 +40,42 @@ No `sudo` needed on `pve`. `--ssh` enables Tailscale SSH (node-identity/ACL-base
 First SSH via Tailscale SSH may require a one-time interactive browser approval (default tailnet `check` mode) — expected, not a hang. See `setup/tailscale.md` for the fleet-wide SSH ACL (`accept` mode, scoped to `group:fleet-admins`) and the key-expiry setting, both admin-console-level and shared across `pve`/`rpi`/`vps`.
 
 Confirm the node joins the tailnet before continuing (`tailscale status`).
+
+## Terraform IaC User
+
+`pve` (node) → `Datacenter` → `Permissions`, done by hand via the web UI.
+
+Replaces a leftover `tofu@pam` user from the pre-rewrite setup, which held the
+built-in `Administrator` role at `/` (full admin, propagated everywhere) —
+not carried forward; deleted rather than reused.
+
+**User**: `terraform@pve`, realm `pve` (Proxmox's own built-in realm), not
+`pam` — this is a pure API-token automation account with no interactive
+login, so it doesn't need a backing Unix system account the way a `pam`-realm
+user would.
+
+**Permissions** (`Datacenter` → `Permissions` → `Add` → `User Permission`),
+scoped to least privilege rather than a single blanket role:
+
+| Path | Role |
+|---|---|
+| `/vms` | `PVEVMAdmin` |
+| `/storage/fast-store` | `PVEDatastoreUser` |
+| `/storage/bulk-store` | `PVEDatastoreUser` |
+| `/mapping/pci/intel-igpu` | `PVEMappingUser` |
+
+All three roles used here are Proxmox built-ins — no custom role needed.
+`PVEMappingUser` (`Mapping.Use`) is granted specifically at
+`/mapping/pci/intel-igpu`, not the parent `/mapping/pci` — the permission
+check Proxmox actually runs (`PVE::QemuServer`, `PVE::API2::Qemu`) is against
+`/mapping/pci/<mapping-name>`, and granting at the parent would hand out
+every current and future PCI mapping on this node instead of just this one.
+The web UI's path autocomplete only suggests the parent as a preset; the
+full per-mapping path has to be typed in manually.
+
+**API token**: `terraform@pve!terraform-gh`, created via `Datacenter` →
+`Permissions` → `API Tokens`, with **Privilege Separation unchecked** so the
+token inherits the user's ACL entries above directly instead of needing its
+own separate grants. Token secret lives only in GitHub Actions secrets
+(`PROXMOX_API_TOKEN_ID` / `PROXMOX_API_TOKEN_SECRET`) — never committed or
+pasted into chat.
