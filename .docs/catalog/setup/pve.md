@@ -48,6 +48,7 @@ tailscale up --ssh --accept-routes=false
 | `/storage/fast-store` | `PVEDatastoreUser` |
 | `/storage/bulk-store` | `PVEDatastoreUser` |
 | `/storage/local` | `PVEDatastoreAdmin` |
+| `/storage/local-lvm` | `PVEDatastoreUser` |
 | `/mapping/pci/intel-igpu` | `PVEMappingUser` |
 | `/sdn/zones/localnetwork/vmbr0` | `SDNUser` (custom) |
 
@@ -59,6 +60,10 @@ one of the two storage pools set up above. `PVEDatastoreAdmin`, not
 volumes), which `PVEDatastoreUser` doesn't grant (that role only covers
 `Datastore.AllocateSpace`/`Datastore.Audit`, enough for VM disks on
 `fast-store`/`bulk-store` but not for the snippet content type).
+
+`/storage/local-lvm` was added after the fact too — the mediacenter disk
+layout rework (see `plans/mediacenter-vm.md`) moved the OS disk, EFI disk,
+and cloud-init drive onto `local-lvm`, which had no grant at all until then.
 
 `/sdn/zones/localnetwork/vmbr0` was also added after the fact — Proxmox
 gates VM network-device attachment behind an `SDN.Use` privilege even for a
