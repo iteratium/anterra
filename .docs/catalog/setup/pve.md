@@ -47,7 +47,25 @@ tailscale up --ssh --accept-routes=false
 | `/vms` | `PVEVMAdmin` |
 | `/storage/fast-store` | `PVEDatastoreUser` |
 | `/storage/bulk-store` | `PVEDatastoreUser` |
+| `/storage/local` | `PVEDatastoreAdmin` |
 | `/mapping/pci/intel-igpu` | `PVEMappingUser` |
+| `/sdn/zones/localnetwork/vmbr0` | `SDNUser` (custom) |
+
+`/storage/local` was added after the fact — needed once the mediacenter VM's
+cloud-init snippet started uploading to the `local` datastore (see
+`plans/mediacenter-vm.md`), missed in the original grant since `local` isn't
+one of the two storage pools set up above. `PVEDatastoreAdmin`, not
+`PVEDatastoreUser` — snippet upload needs `Datastore.Allocate` (create
+volumes), which `PVEDatastoreUser` doesn't grant (that role only covers
+`Datastore.AllocateSpace`/`Datastore.Audit`, enough for VM disks on
+`fast-store`/`bulk-store` but not for the snippet content type).
+
+`/sdn/zones/localnetwork/vmbr0` was also added after the fact — Proxmox
+gates VM network-device attachment behind an `SDN.Use` privilege even for a
+plain bridge like `vmbr0`, treating it as an implicit SDN zone
+(`localnetwork`). No default role includes `SDN.Use` (not even
+`PVEVMAdmin`), so it needs a custom role: `Datacenter` → `Permissions` →
+`Roles` → `Create`, name `SDNUser`, single privilege `SDN.Use`.
 
 **API token**: `terraform@pve!terraform-gh`, created via `Datacenter` → `Permissions` → `API Tokens`, with **Privilege Separation unchecked** 
 The token inherits the user's ACL entries above directly instead of needing its own separate grants. Token secret lives only in GitHub Actions secrets.

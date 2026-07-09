@@ -35,5 +35,5 @@ variable "os_disk_size_gb" {
 
 variable "media_disk_size_gb" {
   type    = number
-  default = 4500
+  default = 4300
 }
