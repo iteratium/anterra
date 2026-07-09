@@ -22,15 +22,20 @@ Everything else (Ansible, Terraform, CI, docs) starts from scratch here.
   steps completed so far (ZFS pools, Tailscale `up` invocations and their
   host-specific gotchas). Read before assuming a host's state.
 - `.docs/catalog/setup/tailscale.md` — fleet-wide Tailscale ACL policy (SSH
-  access via `group:fleet-admins`, `tag:peer-relay` for `vps`, key-expiry
+  access via `group:fleet-admins`, `tag:peer-relay` for `vps`,
+  `tag:mediacenter` for the new Terraform-created `pve` VM, key-expiry
   decision). Not duplicated per host.
 - `.docs/catalog/ci-cd.md` — the planned CI/CD design (not yet built): no
   control node, GitHub-hosted runners joining the tailnet ephemerally,
-  GitHub Actions secrets only (no Bitwarden/vault), Terraform Cloud for
-  state, single `site.yml` Ansible entrypoint, auto-plan/check on PR with
-  approval-gated apply on merge, GitHub Flow branching. Read this in full
-  before discussing or building automation — it has the reasoning behind
-  each choice, not just the choice.
+  GitHub Actions secrets only (no Bitwarden/vault), HCP Terraform (Terraform
+  Cloud) for state, single `site.yml` Ansible entrypoint, auto-plan/check on
+  PR with approval-gated apply on merge, GitHub Flow branching. Read this in
+  full before discussing or building automation — it has the reasoning
+  behind each choice, not just the choice.
+- `.docs/catalog/terraform.md` — external setup completed for the Terraform
+  side specifically: HCP Terraform org/project/workspace, provider choices
+  and why, and the GitHub Actions secrets they depend on. Read before
+  writing or changing anything under `terraform/`.
 
 ## Key fleet facts worth knowing up front
 
@@ -43,6 +48,10 @@ Everything else (Ansible, Terraform, CI, docs) starts from scratch here.
 - Tailscale key expiry is disabled for `pve`, `rpi`, `vps` — Tailscale SSH is
   the primary access path, so an expired key means total lockout with no
   fallback.
+- VMs created via Terraform (e.g. the new `pve` media-center VM) join the
+  tailnet non-interactively — a Tailscale OAuth client mints a fresh,
+  immediately-consumed auth key per `apply` (see `terraform.md`), not the
+  manual `tailscale up` used for `pve`/`rpi`/`vps` themselves.
 
 ## Working conventions
 

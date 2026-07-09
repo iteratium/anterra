@@ -79,3 +79,27 @@ token inherits the user's ACL entries above directly instead of needing its
 own separate grants. Token secret lives only in GitHub Actions secrets
 (`PROXMOX_API_TOKEN_ID` / `PROXMOX_API_TOKEN_SECRET`) — never committed or
 pasted into chat.
+
+## Cloud-Init Template (VM 9000)
+
+Golden image for Terraform to clone — not a real VM, no fleet role of its
+own. Deliberately minimal: one disk, default memory/CPU, no second disk, no
+PCI mapping. Everything specific to an actual VM (extra disks, real
+memory/CPU sizing, `hostpci` for `intel-igpu`, cloud-init user-data) is
+layered on by Terraform at clone time, not baked in here.
+
+- Base image: Ubuntu 26.04 LTS "Resolute Raccoon", minimal cloud image
+  (`ubuntu-26.04-minimal-cloudimg-amd64.img` from
+  `cloud-images.ubuntu.com/minimal/releases/resolute/release/`)
+- `--bios ovmf` — this image is UEFI/GPT-only, no legacy BIOS boot support,
+  unlike older Ubuntu cloud images
+- `--machine q35` — not the Proxmox default `i440fx`; `q35` gives proper
+  PCIe topology, which matters for `intel-igpu` passthrough on VMs cloned
+  from this template
+- `efidisk0` on `fast-store`, `pre-enrolled-keys=0` (Secure Boot key
+  enrollment skipped — boot chain is managed via cloud-init, not signed
+  images)
+- Single OS disk on `fast-store`; `bulk-store` is intentionally absent —
+  that's added per-VM by Terraform, not part of the shared template
+- Built via `qm create`/`qm importdisk`/`qm template` over SSH, VMID `9000`
+  (convention: template VMIDs start at 9000, out of the way of real VMs)

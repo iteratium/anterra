@@ -42,10 +42,11 @@ secrets are the single source of truth for both tools.
 
 ## Terraform state
 
-**Terraform Cloud (free tier)** — org and project already created. Chosen
-because there's no control node to hold local state on disk between runs,
-and TFC pairs natively with `terraform` (part of why OpenTofu was dropped).
-State lives in TFC, not in the repo; no state file to commit back.
+**HCP Terraform (Terraform Cloud, free tier)** — org and project already
+created. Chosen because there's no control node to hold local state on disk
+between runs, and it pairs natively with `terraform` (part of why OpenTofu
+was dropped). State lives there, not in the repo; no state file to commit
+back. Referred to as TFC for brevity elsewhere in this doc.
 
 ## Ansible targeting
 
