@@ -6,6 +6,14 @@ implement the plan-on-PR / apply-on-merge model from `ci-cd.md`. This has not
 been applied yet — see Remaining manual steps below before the first real
 `apply` run.
 
+## Proxmox provider TLS
+
+`terraform/providers.tf` sets `insecure = true` on the `proxmox` provider —
+`pve`'s API uses Proxmox's default self-signed certificate, and nothing in
+`setup/pve.md` provisions a real one. Acceptable because `pve` is reachable
+only over Tailscale (see `setup/tailscale.md`), not exposed to the public
+internet — user confirmed explicitly when this was flagged.
+
 ## Disk layout
 
 One disk per storage pool, not a separate downloads-scratch disk:
