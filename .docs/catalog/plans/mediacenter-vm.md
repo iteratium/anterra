@@ -93,10 +93,67 @@ Terraform:
    seconds.
 
 See `setup/pve.md` (`Cloud-Init Template` section) for the reproducible
-template-build steps including this fix. `mediacenter` (VM 100) itself
-still needs to be destroyed/recreated (via the normal Terraform flow) to
-pick up the fixed template and the `initialization.interface` change —
-this doc doesn't cover that apply.
+template-build steps including this fix. Confirmed working on the real
+apply that recreated `mediacenter` (VM 100) — see below for the apply
+itself, which needed a few more fixes to actually get there.
+
+## Getting the actual apply through: three more issues
+
+The disk-layout PR's `terraform plan` hung indefinitely (well past 15
+minutes) every time, always at the same point: refreshing
+`proxmox_virtual_environment_vm.mediacenter`. Diagnosed by temporarily
+adding `TF_LOG=DEBUG` to `terraform-plan.yml` (logged straight to stdout,
+not a file/artifact — this repo is public, and GitHub's secret redaction
+only covers text streamed through the log viewer, not separately-uploaded
+files). The debug log showed the `bpg/proxmox` provider stuck in a tight
+loop, roughly once a second: `GET
+/api2/json/nodes/pve/qemu/100/agent/network-get-interfaces`, every time
+getting `500 QEMU guest agent is not running`, retrying forever — no
+backoff, no giveup. `agent.wait_for_ip.disabled = true` (the documented
+fix for this in the provider's own docs) did *not* stop it: refresh reads
+the `agent: enabled=1` flag directly off the live VM's actual Proxmox
+config, independent of anything in the `.tf` file. Since VM 100's agent
+had never come up (see above), this was going to hang on every single
+plan/apply against the existing broken VM, forever, regardless of the
+`wait_for_ip` setting.
+
+Unblocked by directly setting `qm set 100 --agent enabled=0` on the live
+(about-to-be-destroyed) VM — took the refresh from hanging indefinitely to
+completing in ~20s. `agent.wait_for_ip.disabled = true` was still added in
+`main.tf` since it's correct/documented behavior for any *future* case
+where the agent is slow rather than completely absent.
+
+Along the way, found `/storage/local-lvm` had no ACL grant at all for
+`terraform@pve` — added `PVEDatastoreUser`, matching the existing
+`fast-store`/`bulk-store` grants (see `setup/pve.md`).
+
+Second issue: once the plan ran, it showed the disk-layout changes as an
+**in-place update** (`0 to add, 1 to change, 0 to destroy`), not a
+replace. `bpg/proxmox` treats `datastore_id`/`size` changes on an existing
+disk as move/resize operations Proxmox can do live, rather than forcing
+recreation. That's usually the right call, but here the whole point was a
+fresh clone from the now-fixed template — an in-place move keeps the
+existing (broken, already-marked-done-with-DataSourceNone) OS disk
+content untouched, so cloud-init still wouldn't have run correctly.
+Forced a real replace by tainting the VM resource via a one-off
+`workflow_dispatch` workflow (`terraform-taint.yml`, added temporarily and
+removed once used — `workflow_dispatch` triggers only work for workflow
+files that exist on the default branch, so this had to be merged before
+it could even be run). `terraform apply` then correctly showed
+`1 added, 0 changed, 1 destroyed`.
+
+Third issue: the recreated VM booted correctly this time (hostname
+`mediacenter`, guest agent up, `DataSourceNoCloud` detected) but
+`runcmd`'s `tailscale up` failed: `backend error: invalid key: API key ...
+not valid`. `tailscale_tailnet_key.mediacenter` had `expiry = 3600` (1
+hour) and `reusable = false` — the key had been sitting unused in
+Terraform state since an earlier apply attempt, and by the time cloud-init
+actually got far enough to use it (after all the plan-hang debugging
+above), it had expired. Fixed by bumping `expiry` to `86400` (24h), enough
+slack for realistic apply-to-boot latency including a stuck
+`production`-environment approval gate. This forced a fresh key on the
+next apply; the already-running VM re-ran the join manually against that
+new key rather than being recreated again.
 
 ## CPU / memory
 

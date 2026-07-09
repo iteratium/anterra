@@ -2,7 +2,7 @@ resource "tailscale_tailnet_key" "mediacenter" {
   reusable      = false
   ephemeral     = false
   preauthorized = true
-  expiry        = 3600
+  expiry        = 86400
   tags          = ["tag:mediacenter"]
   description   = "mediacenter VM cloud-init bootstrap"
 }
