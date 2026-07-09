@@ -1,9 +1,14 @@
 provider "proxmox" {
-  endpoint = "https://pve.tailb3a7a.ts.net:8006/"
+  endpoint = "https://${var.pve_host}:8006/"
   insecure = true
 
   ssh {
     username = "root"
+
+    node {
+      name    = "pve"
+      address = var.pve_host
+    }
   }
 }
 
