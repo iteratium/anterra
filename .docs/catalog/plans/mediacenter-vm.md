@@ -97,7 +97,7 @@ template-build steps including this fix. Confirmed working on the real
 apply that recreated `mediacenter` (VM 100) — see below for the apply
 itself, which needed a few more fixes to actually get there.
 
-## Getting the actual apply through: three more issues
+## Getting the actual apply through: four more issues
 
 The disk-layout PR's `terraform plan` hung indefinitely (well past 15
 minutes) every time, always at the same point: refreshing
@@ -155,6 +155,39 @@ slack for realistic apply-to-boot latency including a stuck
 next apply; the already-running VM re-ran the join manually against that
 new key rather than being recreated again.
 
+Fourth issue: even with a fresh key, the next apply failed outright before
+touching the VM: `failed to open SSH client: unable to authenticate user
+"root" over SSH to "<pve LAN IP>:22" ... no supported methods remain`.
+That's `pve`'s **LAN IP**, not its Tailscale address — the whole design
+(see "SSH access from Terraform to `pve`" above) relies on connecting over
+Tailscale so Tailscale SSH's control-plane auth bypass applies; hitting
+the real LAN-facing `sshd` instead means actual key auth is required,
+which was never set up (by design — the ephemeral key was only ever meant
+to satisfy the Go SSH client's handshake, not to actually authenticate
+anywhere). `bpg/proxmox` doesn't use the `endpoint` host for SSH by
+default — it separately auto-detects each node's SSH address via the
+API, picking whichever of the node's interfaces has a default gateway
+configured, which is the LAN interface (`vmbr0`), not Tailscale (no
+conventional gateway). The GitHub Actions runner apparently has a route
+to the LAN regardless (likely a subnet route advertised into the tailnet
+by another peer), so the connection didn't fail outright, it just
+authenticated against the wrong daemon. Fixed by explicitly pinning the
+SSH target in `providers.tf`:
+```
+ssh {
+  username = "root"
+  node {
+    name    = "pve"
+    address = var.pve_host
+  }
+}
+```
+`var.pve_host` (new `terraform/variables.tf`) also replaces what was
+previously a hardcoded Tailscale hostname directly in the `endpoint`
+line — kept out of the committed `.tf` entirely now, supplied via the
+`PVE_TAILSCALE_HOST` GitHub secret (`TF_VAR_pve_host` in both workflows).
+See `CLAUDE.md`'s secrets table.
+
 ## CPU / memory
 
 - Memory: 24576 MiB dedicated (was 30720), no ballooning (`floating`
@@ -171,7 +204,7 @@ new key rather than being recreated again.
   allocating all cores to the only VM on the host is a low-risk default,
   unlike the disk-size question.
 
-## SSH access from Terraform to `pve` (still untested)
+## SSH access from Terraform to `pve`
 
 Cloud-init `user_data_file_id` requires uploading a snippet file, and the
 `bpg/proxmox` provider only supports snippet upload over SSH (not the
@@ -188,11 +221,12 @@ the client-offered key. The Go SSH client HashiCorp's provider uses still
 needs *some* auth method configured to attempt the handshake, hence the
 throwaway key — its content is never actually checked.
 
-This still hasn't been exercised — the first PR's plan run never got past
-the runner joining the tailnet (see next section). If it fails at the
-snippet-upload step once that's fixed, the likely fallback is a real
-persisted keypair (public key in `pve`'s `~/.ssh/authorized_keys`, private
-key as a new GitHub Actions secret) instead of the ephemeral-key approach.
+Confirmed working, but only after also pinning the SSH target explicitly
+via `providers.tf`'s `ssh.node` block (see "Getting the actual apply
+through" below) — without it, `bpg/proxmox` auto-detects each node's SSH
+address via the API rather than reusing the `endpoint` host, and picks
+`pve`'s LAN interface over its Tailscale one, defeating the whole
+Tailscale-SSH-auth-bypass design.
 
 ## First plan run failure: OAuth client scoped to 2 tags
 

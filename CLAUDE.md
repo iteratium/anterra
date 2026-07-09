@@ -43,3 +43,4 @@ All secrets stored exclusively on Github Secrets
 | `TS_OAUTH_CLIENT_SECRET` | Tailscale OAuth client, scoped to `tag:ci-runner` — joins the GitHub Actions runner to the tailnet |
 | `TS_OAUTH_MEDIACENTER_CLIENT_ID` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |
 | `TS_OAUTH_MEDIACENTER_CLIENT_SECRET` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |
+| `PVE_TAILSCALE_HOST` | `pve`'s Tailscale MagicDNS hostname — Proxmox provider `endpoint` and SSH target, kept out of committed `.tf` files |
