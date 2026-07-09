@@ -34,6 +34,10 @@ resource "proxmox_virtual_environment_vm" "mediacenter" {
 
   agent {
     enabled = true
+
+    wait_for_ip {
+      disabled = true
+    }
   }
 
   stop_on_destroy = true
