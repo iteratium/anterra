@@ -39,5 +39,7 @@ All secrets stored exclusively on Github Secrets
 | `PROXMOX_API_TOKEN_ID` | `terraform@pve!terraform-gh` — Proxmox provider auth |
 | `PROXMOX_API_TOKEN_SECRET` | Proxmox provider auth |
 | `TF_API_TOKEN` | HCP Terraform team token — backend auth |
-| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client — mints the VM's join key |
-| `TS_OAUTH_CLIENT_SECRET` | Tailscale OAuth client — mints the VM's join key |
+| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth client, scoped to `tag:ci-runner` — joins the GitHub Actions runner to the tailnet |
+| `TS_OAUTH_CLIENT_SECRET` | Tailscale OAuth client, scoped to `tag:ci-runner` — joins the GitHub Actions runner to the tailnet |
+| `TS_OAUTH_MEDIACENTER_CLIENT_ID` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |
+| `TS_OAUTH_MEDIACENTER_CLIENT_SECRET` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |

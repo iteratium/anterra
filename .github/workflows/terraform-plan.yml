@@ -1,0 +1,61 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - terraform/**
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci-runner
+
+      - name: Generate ephemeral SSH keypair for Proxmox snippet upload
+        run: |
+          ssh-keygen -t ed25519 -N "" -f "${RUNNER_TEMP}/tf_ssh_key"
+          {
+            echo "PROXMOX_VE_SSH_PRIVATE_KEY<<EOF"
+            cat "${RUNNER_TEMP}/tf_ssh_key"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Terraform init
+        run: terraform -chdir=terraform init
+
+      - name: Terraform plan
+        id: plan
+        env:
+          PROXMOX_VE_API_TOKEN: ${{ secrets.PROXMOX_API_TOKEN_ID }}=${{ secrets.PROXMOX_API_TOKEN_SECRET }}
+          TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_ID }}
+          TAILSCALE_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_SECRET }}
+        run: terraform -chdir=terraform plan -no-color
+        continue-on-error: true
+
+      - uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: terraform-plan
+          message: |
+            ### Terraform Plan
+
+            ```
+            ${{ steps.plan.outputs.stdout }}
+            ```
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
