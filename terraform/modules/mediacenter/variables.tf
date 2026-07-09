@@ -25,7 +25,7 @@ variable "cpu_cores" {
 
 variable "memory_mib" {
   type    = number
-  default = 30720
+  default = 24576
 }
 
 variable "os_disk_size_gb" {
