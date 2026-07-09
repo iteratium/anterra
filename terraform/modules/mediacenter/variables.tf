@@ -30,10 +30,15 @@ variable "memory_mib" {
 
 variable "os_disk_size_gb" {
   type    = number
-  default = 850
+  default = 100
 }
 
 variable "media_disk_size_gb" {
   type    = number
   default = 4300
+}
+
+variable "appdata_disk_size_gb" {
+  type    = number
+  default = 850
 }

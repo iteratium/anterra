@@ -54,16 +54,15 @@ resource "proxmox_virtual_environment_vm" "mediacenter" {
   }
 
   efi_disk {
-    datastore_id      = "fast-store"
+    datastore_id      = "local-lvm"
     type              = "4m"
     pre_enrolled_keys = false
   }
 
   disk {
-    datastore_id = "fast-store"
+    datastore_id = "local-lvm"
     interface    = "scsi0"
     size         = var.os_disk_size_gb
-    file_format  = "raw"
     ssd          = true
   }
 
@@ -72,6 +71,14 @@ resource "proxmox_virtual_environment_vm" "mediacenter" {
     interface    = "scsi1"
     size         = var.media_disk_size_gb
     file_format  = "raw"
+  }
+
+  disk {
+    datastore_id = "fast-store"
+    interface    = "scsi2"
+    size         = var.appdata_disk_size_gb
+    file_format  = "raw"
+    ssd          = true
   }
 
   hostpci {
@@ -83,7 +90,8 @@ resource "proxmox_virtual_environment_vm" "mediacenter" {
   network_device {}
 
   initialization {
-    datastore_id      = "fast-store"
+    datastore_id      = "local-lvm"
+    interface         = "scsi3"
     user_data_file_id = proxmox_virtual_environment_file.cloud_config.id
 
     ip_config {

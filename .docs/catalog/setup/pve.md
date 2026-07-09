@@ -80,3 +80,25 @@ Golden image for Terraform to clone: Everything specific to an actual VM (extra 
 - `efidisk0` on `fast-store`, `pre-enrolled-keys=0` (Secure Boot key enrollment skipped — boot chain is managed via cloud-init, not signed images)
 - Single OS disk on `fast-store`; `bulk-store` added per-VM by Terraform, not part of the shared template
 - Built via `qm create`/`qm importdisk`/`qm template` over SSH, VMID `9000`
+
+**`/etc/cloud/ds-identify.cfg`** — must contain `policy: search,found=all,maybe=all,notfound=enabled`,
+written into the template disk before running `qm template`. Without it, clones
+silently never run cloud-init: `ds-identify` runs as a systemd generator very
+early in boot, before the cloud-init CD-ROM device is enumerated by the kernel,
+so its `blkid` scan finds no `cidata`-labeled filesystem and the generator
+disables `cloud-init.target` for that boot entirely — no error, nothing on
+disk (its own log lives in `/run`, gone by shutdown). Upstream bug, not
+specific to this template: [cloud-init#6304](https://github.com/canonical/cloud-init/issues/6304),
+[LP#1940791](https://bugs.launchpad.net/bugs/1940791). Found and fixed after
+the first real `mediacenter` apply — see `plans/mediacenter-vm.md`.
+- **Cloud-init drive must be attached via SCSI, not the Proxmox-default IDE**
+  (Terraform's `initialization.interface = "scsi3"` in the `mediacenter`
+  module). The `ds-identify.cfg` fix above only stops the generator from
+  disabling cloud-init — cloud-init's own datasource search hits the *same*
+  race (CD-ROM not yet visible when it runs) and silently falls back to
+  `DataSourceNone` (no user-data applied at all) if left on `ide2`. SCSI
+  devices enumerate fast enough under `q35` that the race doesn't happen in
+  practice. Confirmed by testing both variants on a throwaway clone:
+  `ide2` — cloud-init took 4+ minutes and still used the empty fallback
+  datasource; `scsi` — hostname/network/packages all correct within 20
+  seconds.

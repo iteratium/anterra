@@ -16,19 +16,28 @@ internet — user confirmed explicitly when this was flagged.
 
 ## Disk layout
 
-One disk per storage pool, not a separate downloads-scratch disk:
-
-- `fast-store` (SSD): the cloned OS disk (`scsi0`), resized to 850 GB —
-  most of the ~931 GiB pool, leaving headroom for ZFS COW/snapshot overhead
-  rather than literally 100%. Downloads and transcode scratch live in
-  folders on this same disk, not a separate virtual disk — user's explicit
-  call, overriding the earlier plan (see [[project_jellyfin_vm]]) of a
-  second fast-store disk.
-- `bulk-store` (mirrored HDD): one new disk (`scsi1`), 4300 GB (was 4500,
+- OS disk (`scsi0`, `efidisk0`, and the cloud-init drive) moved off
+  `fast-store` onto `local-lvm` (the host's LVM-thin pool on the boot SSD),
+  sized 100 GB — was 850 GB direct on `fast-store`. `local-lvm` has ~140 GB
+  free in the thin pool, is already thin-provisioned (no ZFS
+  refreservation-vs-actual-usage confusion), and this frees `fast-store`
+  entirely for app-data/downloads/whatever comes up later, instead of
+  reserving most of the pool for the OS disk upfront. User's call — found
+  after the first real apply, see the ZFS reservation note below (which
+  explains why `fast-store` looked 95%+ full for an empty disk).
+- `bulk-store` (mirrored HDD): one disk (`scsi1`), 4300 GB (was 4500,
   see below) — for the Jellyfin media library.
+- `fast-store` (SSD): one disk (`scsi2`), 850 GB — for app-data/downloads/
+  transcode scratch. Same reasoning as `bulk-store`: attach the disk now
+  even though nothing is provisioned on it yet, rather than leaving it
+  undefined until Ansible needs it. 850 GB chosen over the initially
+  requested 900 GB — see the slop-space note below; 900 GB left ~0 real
+  margin on this pool given the same ZFS reservation behavior that bit
+  `bulk-store` at 4500 GB.
 
-Both sizes are `terraform/modules/mediacenter/variables.tf` defaults
-(`os_disk_size_gb`, `media_disk_size_gb`), not hardcoded in the resource.
+All three sizes are `terraform/modules/mediacenter/variables.tf` defaults
+(`os_disk_size_gb`, `media_disk_size_gb`, `appdata_disk_size_gb`), not
+hardcoded in the resource.
 
 **4500 GB failed on the real apply** — `zfs error: cannot create
 'bulk-store/vm-100-disk-0': out of space`. `zpool list` reported 4.55T free,
@@ -38,6 +47,56 @@ but that's pool-wide free space before ZFS's slop-space reservation
 overhead on top of the raw `size`. Dropped to 4300 GB for real margin.
 Lesson: check `zfs list <pool>` (not `zpool list`) for actual available
 capacity when sizing disks against ZFS-backed Proxmox storage.
+
+**ZFS zvols are thick-provisioned by default** — `refreservation` is set
+equal to `volsize` at creation, so `zfs list`'s `USED` column shows the
+full declared disk size immediately, regardless of how much data is
+actually written (`REFER` is the real figure). A freshly-created, empty
+850 GB disk on a 928 GB pool legitimately shows ~95% `USED`. Not a bug,
+just easy to misread from `zpool`/dashboard-level views — this is what
+originally prompted moving the OS disk to `local-lvm` above.
+
+## Cloud-init never ran on first real boot (no hostname, no network, no Tailscale)
+
+After the first real apply, the VM booted fine (login prompt reachable over
+serial) but `qemu-guest-agent` never came up, hostname stayed the image
+default (`ubuntu`, not `mediacenter`), and the VM sent zero network traffic
+ever — no DHCP, no ARP. It never joined the tailnet as a result (`runcmd`
+in the cloud-init user-data, which installs the agent and runs
+`tailscale up`, never executed).
+
+Diagnosed by mounting the template's disk read-only (safe — templates
+aren't running) and confirming it was genuinely pristine (`/var/lib/cloud/`
+didn't exist, no stale semaphores), then cloning it to a throwaway
+diagnostic VM (`9001`, no `hostpci0`, cloud-init payload with an injected
+SSH key so it was actually loggable-into) to reproduce and instrument the
+failure directly. Root cause: `ds-identify` (cloud-init's systemd
+generator) and cloud-init's own datasource search both run early enough in
+boot that the `ide2` CD-ROM cloud-init drive isn't enumerated by the
+kernel yet — a known upstream race
+([cloud-init#6304](https://github.com/canonical/cloud-init/issues/6304),
+[LP#1940791](https://bugs.launchpad.net/bugs/1940791)). The generator
+silently disables `cloud-init.target` for that boot; even when forced
+enabled, cloud-init's own search still falls back to the no-op
+`DataSourceNone`. No error surfaces anywhere persisted to disk — the
+generator's log lives in `/run` (tmpfs), gone by shutdown.
+
+Fix, applied directly to the template (VM 9000) and going forward via
+Terraform:
+1. `/etc/cloud/ds-identify.cfg` on the template disk:
+   `policy: search,found=all,maybe=all,notfound=enabled`.
+2. Cloud-init drive moved from Proxmox's default `ide2` to SCSI
+   (`initialization.interface = "scsi3"` in `main.tf`) — SCSI enumerates
+   fast enough under `q35` that the race doesn't happen. Verified on the
+   throwaway VM: `ide2` took 4+ minutes and still used the empty fallback
+   datasource; `scsi` had hostname/network/packages all correct within 20
+   seconds.
+
+See `setup/pve.md` (`Cloud-Init Template` section) for the reproducible
+template-build steps including this fix. `mediacenter` (VM 100) itself
+still needs to be destroyed/recreated (via the normal Terraform flow) to
+pick up the fixed template and the `initialization.interface` change —
+this doc doesn't cover that apply.
 
 ## CPU / memory
 
