@@ -1,9 +1,10 @@
 # CI/CD — Planned
 
-Design decisions recorded during setup, ahead of building automation. Terraform
-plan/apply workflows exist (`.github/workflows/terraform-plan.yml`,
-`terraform-apply.yml`); the Ansible `site.yml` workflow does not yet. See
-`plans/mediacenter-vm.md` for Terraform implementation notes.
+Design decisions recorded during setup. Terraform plan/apply workflows
+(`.github/workflows/terraform-plan.yml`, `terraform-apply.yml`) and Ansible
+check/apply workflows (`ansible-check.yml`, `ansible-apply.yml`) exist. See
+`plans/mediacenter-vm.md` for Terraform implementation notes and
+`plans/docker-portainer.md` for the Docker/Portainer rollout.
 
 **Terraform, not OpenTofu** (old repo used OpenTofu). Uses
 `hashicorp/setup-terraform` and the `terraform` binary.
@@ -62,8 +63,10 @@ branch: only one environment exists, so `dev` would add a merge hop isolating
 nothing; the PR plan/diff comments are the safety net.
 
 Branch protection on `main`: plan/check as a required status check. Terraform
-`plan` is configured (`setup/github.md`); add the Ansible check once its
-workflow exists.
+`plan` is configured (`setup/github.md`); add the Ansible `check` job to the
+required checks. Stub workflows (`terraform-plan-stub.yml`,
+`ansible-check-stub.yml`) satisfy the required check on PRs that don't touch
+that path.
 
 ## Change process
 

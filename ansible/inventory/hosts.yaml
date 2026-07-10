@@ -8,4 +8,17 @@ all:
         vps:
     vms:
       hosts:
+        mediacenter:
+    docker_hosts:
+      hosts:
+        mediacenter:
+        rpi:
+        vps:
+    portainer_server:
+      hosts:
+        mediacenter:
+    portainer_agents:
+      hosts:
+        rpi:
+        vps:
 ...
