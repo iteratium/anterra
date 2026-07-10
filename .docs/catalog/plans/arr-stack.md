@@ -40,7 +40,7 @@ socket.
 ## One-time bootstrap
 
 1. Portainer UI: generate an API token (`PORTAINER_API_KEY`); note the mediacenter
-   (local) endpoint id (`mediacenter_endpoint_id` tfvar, default 1).
+   (local) endpoint id (`mediacenter_endpoint_id` tfvar, default 2).
 2. AirVPN client area: generate a WireGuard config (private key, preshared key,
    addresses) and a forwarded port.
 3. After first deploy, configure each app once: qbittorrent (creds, save path

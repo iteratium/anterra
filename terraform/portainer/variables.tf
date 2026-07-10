@@ -13,7 +13,7 @@ variable "domain_name" {
 variable "mediacenter_endpoint_id" {
   type        = number
   description = "Portainer endpoint id for the mediacenter (local) environment"
-  default     = 1
+  default     = 2
 }
 
 variable "docker_timezone" {
