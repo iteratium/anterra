@@ -9,8 +9,22 @@ internal_reverse_proxy_records:
   - domain: ui.{{ domain_name }}
     upstream: "https://{{ unifi_console_ip }}:443"
     tls_skip_verify: true
+  - domain: qbittorrent.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8585"
+  - domain: radarr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:7878"
+  - domain: sonarr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8989"
+  - domain: prowlarr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:9696"
+  - domain: profilarr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:6868"
+  - domain: flaresolverr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8191"
 
 external_reverse_proxy_records:
   - domain: jellyfin.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8096"
+  - domain: seerr.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:5055"
 ...

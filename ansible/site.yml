@@ -10,4 +10,5 @@
 - import_playbook: playbooks/portainer.yml
 - import_playbook: playbooks/caddy.yml
 - import_playbook: playbooks/jellyfin.yml
+- import_playbook: playbooks/arr-storage.yml
 ...

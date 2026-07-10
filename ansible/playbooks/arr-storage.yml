@@ -1,0 +1,93 @@
+---
+- name: Prepare mediacenter storage and ownership for the arr stack
+  hosts: mediacenter
+  become: true
+  gather_facts: true
+  vars:
+    media_gid: 1500
+    docker_uid: 1500
+    app_data_base: /mnt/fast-store/app-data
+    downloads_base: /mnt/fast-store/downloads
+    media_base: /mnt/bulk-store/media
+    app_data_dirs:
+      - qbittorrent
+      - radarr
+      - sonarr
+      - prowlarr
+      - profilarr
+      - flaresolverr
+      - seerr
+      - gluetun
+    owned_trees:
+      - /mnt/fast-store/app-data
+      - /mnt/fast-store/downloads
+      - /mnt/bulk-store/media
+  tasks:
+    - name: Create media group
+      ansible.builtin.group:
+        name: media
+        gid: "{{ media_gid }}"
+        state: present
+
+    - name: Create docker owner user
+      ansible.builtin.user:
+        name: docker
+        uid: "{{ docker_uid }}"
+        group: media
+        system: true
+        shell: /usr/sbin/nologin
+        create_home: false
+        state: present
+
+    - name: Create app-data subdirectories
+      ansible.builtin.file:
+        path: "{{ app_data_base }}/{{ item }}"
+        state: directory
+        owner: docker
+        group: media
+        mode: "2775"
+      loop: "{{ app_data_dirs }}"
+
+    - name: Create downloads subdirectories
+      ansible.builtin.file:
+        path: "{{ downloads_base }}/{{ item }}"
+        state: directory
+        owner: docker
+        group: media
+        mode: "2775"
+      loop:
+        - complete
+        - incomplete
+
+    - name: Ensure media library directories
+      ansible.builtin.file:
+        path: "{{ media_base }}/{{ item }}"
+        state: directory
+        owner: docker
+        group: media
+        mode: "2775"
+      loop:
+        - movies
+        - tv
+
+    - name: Set ownership on the storage trees
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: docker
+        group: media
+        recurse: true
+      loop: "{{ owned_trees }}"
+
+    - name: Grant jellyfin read access to media via the media group
+      ansible.builtin.user:
+        name: jellyfin
+        groups: media
+        append: true
+      register: jellyfin_media_group
+
+    - name: Restart Jellyfin to pick up media group membership
+      ansible.builtin.systemd:
+        name: jellyfin
+        state: restarted
+      when: jellyfin_media_group.changed
