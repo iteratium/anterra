@@ -2,6 +2,15 @@
 - name: Install Docker Engine
   hosts: docker_hosts
   gather_facts: true
+  pre_tasks:
+    - name: Ensure apt prerequisites for the Docker repository
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+        update_cache: true
   roles:
     - role: geerlingguy.docker
 ...
