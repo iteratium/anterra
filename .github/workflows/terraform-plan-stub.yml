@@ -1,0 +1,12 @@
+name: Terraform Plan (stub)
+
+on:
+  pull_request:
+    paths-ignore:
+      - terraform/**
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No terraform/ changes in this PR; plan not required."
