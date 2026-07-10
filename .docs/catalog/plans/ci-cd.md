@@ -37,10 +37,14 @@ local state between runs, and it pairs natively with `terraform`.
   LAN IPs — the runner's only path is the tailnet.
 - **Entrypoint**: single `site.yml`. Trigger on any `ansible/**` change and run
   the whole thing — cheap at 3 hosts, avoids change-detection logic.
+- **PR gate**: hard-fail on `--syntax-check` and an all-hosts `ping`; these are
+  the blocking checks (`check` job).
 - **PR preview**: `ansible-playbook --check --diff`, stdout captured into a
   generic PR-comment action (no off-the-shelf equivalent to Terraform's
-  plan-comment actions). `--check` isn't a perfect analog to `terraform plan`
-  (shell/command tasks report inaccurately) — treat as preview, not guarantee.
+  plan-comment actions). Non-blocking — `--check` isn't a perfect analog to
+  `terraform plan`: it reports failures for first-time installs (a repo must be
+  added before its packages are visible) and shell/command tasks report
+  inaccurately. Treat as preview, not guarantee.
 
 ## Trigger model
 
