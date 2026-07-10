@@ -50,3 +50,15 @@ socket.
 ## Verify VPN killswitch
 
 `docker exec gluetun wget -qO- ifconfig.io` must return the AirVPN exit IP.
+
+## Operating notes
+
+- Apps behind gluetun share one network namespace, so they reach each other over
+  `localhost`, not container names or IPs: seerr/prowlarr -> radarr at `localhost:7878`,
+  sonarr `localhost:8989`, flaresolverr `http://localhost:8191`, download client
+  qbittorrent `localhost:8585`. Set qbittorrent's listen port to the AirVPN forwarded
+  port.
+- seerr -> Jellyfin: Jellyfin runs natively on the host, outside the namespace. Point
+  seerr at mediacenter's own Tailscale IP (`tailscale ip -4`) on port 8096. The MagicDNS
+  name does not resolve inside the gluetun namespace, and the public hostname hairpins
+  out through the VPN.

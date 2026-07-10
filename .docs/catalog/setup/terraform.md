@@ -6,8 +6,10 @@ Manual, one time steps completed in [HCP Terraform](https://app.terraform.io)
 
 - Org: `prodigal4176`
 - Project: `anterra`
-- Workspace: `github-actions`
-- **Execution Mode: Local** — set explicitly;
+- Workspaces: `github-actions` (infra), `github-actions-cloudflare`, `github-actions-portainer`
+- **Execution Mode: Local on every workspace** — set explicitly. Remote runs execute on
+  HCP's servers, which are not on the tailnet, so any apply that must reach pve or an
+  internal service (e.g. the Portainer stack endpoint) fails from Remote mode.
 - Auth: a Team API token (`owners` team). Stored as `TF_API_TOKEN` in GitHub Actions secrets.
 
 ### Providers
