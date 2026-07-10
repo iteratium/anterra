@@ -21,6 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            infra:
+              - 'terraform/infra/**'
+            cloudflare:
+              - 'terraform/cloudflare/**'
+            portainer:
+              - 'terraform/portainer/**'
+
       - uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
@@ -28,30 +39,54 @@ jobs:
           tags: tag:ci-runner
 
       - name: Generate ephemeral SSH keypair for Proxmox snippet upload
+        if: steps.filter.outputs.infra == 'true'
         run: |
           ssh-keygen -t ed25519 -N "" -f "${RUNNER_TEMP}/tf_ssh_key"
           {
             echo "PROXMOX_VE_SSH_PRIVATE_KEY<<EOF"
             cat "${RUNNER_TEMP}/tf_ssh_key"
             echo "EOF"
-          } >>"$GITHUB_ENV"
+          } >> "$GITHUB_ENV"
 
       - uses: hashicorp/setup-terraform@v3
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-      - name: Terraform init
-        run: terraform -chdir=terraform init
-
-      - name: Terraform apply
+      - name: Apply infra
+        if: steps.filter.outputs.infra == 'true'
         env:
           PROXMOX_VE_API_TOKEN: ${{ secrets.PROXMOX_API_TOKEN_ID }}=${{ secrets.PROXMOX_API_TOKEN_SECRET }}
           TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_ID }}
           TAILSCALE_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_SECRET }}
           TF_VAR_pve_host: ${{ secrets.PVE_TAILSCALE_HOST }}
+        run: |
+          terraform -chdir=terraform/infra init
+          terraform -chdir=terraform/infra apply -auto-approve -no-color
+
+      - name: Apply cloudflare
+        if: steps.filter.outputs.cloudflare == 'true'
+        env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_domain_name: ${{ secrets.BASE_DOMAIN }}
           TF_VAR_rpi_tailscale_ip: ${{ secrets.RPI_TAILSCALE_IP }}
           TF_VAR_vps_public_ip: ${{ secrets.VPS_PUBLIC_IP }}
-        run: terraform -chdir=terraform apply -auto-approve -no-color
+        run: |
+          terraform -chdir=terraform/cloudflare init
+          terraform -chdir=terraform/cloudflare apply -auto-approve -no-color
+
+      - name: Apply portainer
+        if: steps.filter.outputs.portainer == 'true'
+        env:
+          TF_VAR_portainer_api_key: ${{ secrets.PORTAINER_API_KEY }}
+          TF_VAR_domain_name: ${{ secrets.BASE_DOMAIN }}
+          TF_VAR_wireguard_private_key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          TF_VAR_wireguard_preshared_key: ${{ secrets.WIREGUARD_PRESHARED_KEY }}
+          TF_VAR_wireguard_addresses: ${{ secrets.WIREGUARD_ADDRESSES }}
+          TF_VAR_airvpn_forwarded_port: ${{ secrets.AIRVPN_FORWARDED_PORT }}
+          TF_VAR_profilarr_pat: ${{ secrets.PROFILARR_PAT }}
+          TF_VAR_git_user_name: ${{ secrets.GIT_USER_NAME }}
+          TF_VAR_git_user_email: ${{ secrets.GIT_USER_EMAIL }}
+        run: |
+          terraform -chdir=terraform/portainer init
+          terraform -chdir=terraform/portainer apply -auto-approve -no-color

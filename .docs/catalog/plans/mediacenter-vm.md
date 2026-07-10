@@ -129,6 +129,5 @@ two data disks and installs Jellyfin with Intel iGPU transcoding:
 
 ## Out of scope
 
-- arr stack: a `docker` user will own `media`/`app-data`/`downloads`, with
-  `jellyfin` granted read on `media`. Media-dir ownership stays `root:root` until
-  then.
+- arr stack: storage ownership and the download/automation stack are covered in
+  `arr-stack.md`.
