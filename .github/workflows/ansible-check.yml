@@ -18,6 +18,7 @@ jobs:
       portainer: ${{ steps.filter.outputs.portainer }}
       caddy: ${{ steps.filter.outputs.caddy }}
       jellyfin: ${{ steps.filter.outputs.jellyfin }}
+      arr_storage: ${{ steps.filter.outputs.arr_storage }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +40,8 @@ jobs:
               - 'ansible/playbooks/templates/**'
             jellyfin:
               - 'ansible/playbooks/jellyfin.yml'
+            arr_storage:
+              - 'ansible/playbooks/arr-storage.yml'
 
   check:
     needs: changes
@@ -81,6 +84,7 @@ jobs:
             [ "${{ needs.changes.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
             [ "${{ needs.changes.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
             [ "${{ needs.changes.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
+            [ "${{ needs.changes.outputs.arr_storage }}" = "true" ] && LIST="$LIST ansible/playbooks/arr-storage.yml"
             echo "list=$LIST" >> "$GITHUB_OUTPUT"
           fi
 
