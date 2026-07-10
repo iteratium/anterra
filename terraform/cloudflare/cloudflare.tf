@@ -13,7 +13,7 @@ locals {
 
   external_services = {
     jellyfin = { proxied = false }
-    seerr    = { proxied = false }
+    seerr    = { proxied = true }
   }
 }
 

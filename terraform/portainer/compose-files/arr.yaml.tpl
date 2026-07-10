@@ -52,6 +52,7 @@ services:
     image: ghcr.io/seerr-team/seerr:latest
     init: true
     container_name: seerr
+    user: "${docker_user_puid}:${docker_user_pgid}"
     network_mode: "service:gluetun"
     depends_on: [gluetun]
     environment:
