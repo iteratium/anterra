@@ -80,7 +80,7 @@
       ansible.builtin.copy:
         content: |
           {
-            acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+          	acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
           }
 
           import /etc/caddy/conf.d/*.caddy
