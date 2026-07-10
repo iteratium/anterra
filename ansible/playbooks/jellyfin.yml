@@ -1,0 +1,136 @@
+---
+- name: Install Jellyfin with Intel iGPU hardware transcoding
+  hosts: mediacenter
+  become: true
+  gather_facts: true
+  vars:
+    jellyfin_user: jellyfin
+    media_folders:
+      - /mnt/fast-store/app-data
+      - /mnt/fast-store/downloads
+      - /mnt/bulk-store/media
+      - /mnt/bulk-store/media/movies
+      - /mnt/bulk-store/media/tv
+  tasks:
+    - name: Create ext4 filesystem on data disks
+      community.general.filesystem:
+        fstype: ext4
+        dev: "{{ item.device }}"
+        opts: "-L {{ item.label }}"
+      loop: "{{ media_disks }}"
+
+    - name: Mount data disks by label
+      ansible.posix.mount:
+        path: "{{ item.mountpoint }}"
+        src: "LABEL={{ item.label }}"
+        fstype: ext4
+        state: mounted
+      loop: "{{ media_disks }}"
+
+    - name: Create media and app folder layout
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ media_folders }}"
+
+    - name: Ensure apt keyrings directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download Jellyfin GPG signing key
+      ansible.builtin.get_url:
+        url: https://repo.jellyfin.org/jellyfin_team.gpg.key
+        dest: /etc/apt/keyrings/jellyfin.asc
+        mode: "0644"
+      retries: 3
+      delay: 5
+      register: jellyfin_key_download
+
+    - name: Dearmor Jellyfin GPG key
+      ansible.builtin.command: gpg --yes --dearmor -o /etc/apt/keyrings/jellyfin.gpg /etc/apt/keyrings/jellyfin.asc
+      changed_when: jellyfin_key_download.changed
+
+    - name: Add Jellyfin repository in DEB822 format
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/jellyfin.sources
+        mode: "0644"
+        owner: root
+        group: root
+        content: |
+          Types: deb
+          URIs: https://repo.jellyfin.org/{{ ansible_facts['distribution'] | lower }}
+          Suites: {{ ansible_facts['distribution_release'] }}
+          Components: main
+          Architectures: {{ 'amd64' if ansible_facts['architecture'] == 'x86_64' else ansible_facts['architecture'] }}
+          Signed-By: /etc/apt/keyrings/jellyfin.gpg
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install Intel GPU drivers and tooling
+      ansible.builtin.apt:
+        name:
+          - intel-media-va-driver-non-free
+          - i965-va-driver
+          - vainfo
+          - intel-gpu-tools
+          - curl
+          - gnupg
+          - apt-transport-https
+        state: present
+
+    - name: Install Jellyfin server
+      ansible.builtin.apt:
+        name: jellyfin
+        state: present
+
+    - name: Add jellyfin user to render and video groups for GPU access
+      ansible.builtin.user:
+        name: "{{ jellyfin_user }}"
+        groups:
+          - render
+          - video
+        append: true
+      register: jellyfin_groups
+
+    - name: Check Intel Quick Sync availability
+      ansible.builtin.command: vainfo
+      register: vainfo_output
+      changed_when: false
+      failed_when: false
+
+    - name: Show vainfo output
+      ansible.builtin.debug:
+        var: vainfo_output.stdout_lines
+
+    - name: Enable and start Jellyfin
+      ansible.builtin.systemd:
+        name: jellyfin
+        enabled: true
+        state: started
+
+    - name: Restart Jellyfin to pick up GPU group membership
+      ansible.builtin.systemd:
+        name: jellyfin
+        state: restarted
+      when: jellyfin_groups.changed
+
+    - name: Check if UFW is installed
+      ansible.builtin.command: which ufw
+      register: ufw_check
+      changed_when: false
+      failed_when: false
+
+    - name: Allow Jellyfin through firewall
+      community.general.ufw:
+        rule: allow
+        port: "8096"
+        proto: tcp
+      when: ufw_check.rc == 0
+...
