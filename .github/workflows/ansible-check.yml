@@ -41,6 +41,7 @@ jobs:
 
       - name: Ansible check (preview)
         id: check
+        if: always()
         run: |
           set -o pipefail
           ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff 2>&1 | tee "${RUNNER_TEMP}/check.log"
@@ -55,7 +56,7 @@ jobs:
             echo "\`--check --diff\` is advisory — first-time installs report failures that a real apply resolves (a repo must be added before its packages are visible). The hard gates are the syntax and connectivity checks above."
             echo
             echo '```'
-            cat "${RUNNER_TEMP}/check.log"
+            cat "${RUNNER_TEMP}/check.log" 2>/dev/null || echo "(preview did not run)"
             echo '```'
           } > "${RUNNER_TEMP}/comment.md"
 
