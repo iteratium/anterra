@@ -15,7 +15,35 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      docker: ${{ steps.filter.outputs.docker }}
+      portainer: ${{ steps.filter.outputs.portainer }}
+      caddy: ${{ steps.filter.outputs.caddy }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'ansible/inventory/**'
+              - 'ansible/roles/**'
+              - 'ansible/requirements.yml'
+              - 'ansible/site.yml'
+            docker:
+              - 'ansible/playbooks/docker.yml'
+            portainer:
+              - 'ansible/playbooks/portainer.yml'
+            caddy:
+              - 'ansible/playbooks/caddy.yml'
+              - 'ansible/playbooks/templates/**'
+
   apply:
+    needs: changes
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -39,7 +67,21 @@ jobs:
           ansible-galaxy install -r ansible/requirements.yml
           ansible-galaxy collection install -r ansible/requirements.yml
 
+      - name: Determine playbooks to run
+        id: playbooks
+        run: |
+          if [ "${{ needs.changes.outputs.shared }}" = "true" ]; then
+            echo "list=ansible/site.yml" >> "$GITHUB_OUTPUT"
+          else
+            LIST=""
+            [ "${{ needs.changes.outputs.docker }}" = "true" ] && LIST="$LIST ansible/playbooks/docker.yml"
+            [ "${{ needs.changes.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
+            [ "${{ needs.changes.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
+            echo "list=$LIST" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Ansible apply
+        if: steps.playbooks.outputs.list != ''
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --extra-vars "domain_name=${{ secrets.BASE_DOMAIN }} unifi_console_ip=${{ secrets.UNIFI_CONSOLE_IP }}"
+        run: ansible-playbook -i ansible/inventory/hosts.yaml ${{ steps.playbooks.outputs.list }} --extra-vars "domain_name=${{ secrets.BASE_DOMAIN }} unifi_console_ip=${{ secrets.UNIFI_CONSOLE_IP }}"
