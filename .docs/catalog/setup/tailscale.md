@@ -70,44 +70,31 @@ Added in both places `tag:peer-relay` appears:
 
 ## `tag:ci-runner` and `tag:fleet-host`
 
-The ephemeral GitHub Actions runner (see `plans/ci-cd.md`) needs to
-Tailscale-SSH into `pve`/`rpi`/`vps` to run Terraform (snippet upload) and
-Ansible. It joins the tailnet as `tag:ci-runner`, tag-owned like
-`tag:peer-relay`/`tag:mediacenter`.
+The ephemeral GitHub Actions runner (`plans/ci-cd.md`) joins as
+`tag:ci-runner` to Tailscale-SSH into `pve`/`rpi`/`vps` for Terraform and
+Ansible. It needs its own `ssh` rule: a tag-based `src` can't use
+`autogroup:self` or a bare hostname `dst` (both require a user/group `src`),
+and `pve`/`rpi` are user-owned, so they can't be named directly.
 
-This needs its own `ssh` rule, separate from the `group:fleet-admins` one:
-Tailscale only allows `autogroup:self` in `dst` when `src` is exclusively
-users/groups, and only allows a bare hostname/named-user `dst` when `src` is
-that same user — a tag-based `src` can't use either. `pve` and `rpi` are
-user-owned (not tag-owned), so there was no way to name them as `dst` in a
-tag-sourced rule.
-
-Fix: tag `pve` and `rpi` themselves with a new tag, `tag:fleet-host`, so the
-`tag:ci-runner` rule can reach them via `dst: ["tag:fleet-host", ...]`
-instead of `autogroup:self`. Applied per-device in the admin console
-(**Machines** → device → **…** → **Edit ACL tags**), not via `tailscale up`
-on the device itself.
+Fix: tag `pve` and `rpi` with `tag:fleet-host` so the rule reaches them via
+`dst: ["tag:fleet-host", ...]`. Applied per-device in the admin console
+(**Machines** → device → **…** → **Edit ACL tags**).
 
 ## OAuth clients
 
-Two separate single-tag OAuth clients, not one client scoped to both tags:
+Two single-tag OAuth clients (Auth Keys: Write), not one scoped to both:
 
-- One scoped to `tag:ci-runner` only (Auth Keys: Write) — used by
-  `tailscale/github-action` in both workflows to join the runner itself to
-  the tailnet. Secrets: `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_CLIENT_SECRET`.
-- One scoped to `tag:mediacenter` only (Auth Keys: Write) — used by
-  Terraform's `tailscale` provider (`TAILSCALE_OAUTH_CLIENT_ID`/`SECRET` env
-  vars) to mint the VM's join key via `tailscale_tailnet_key`. Secrets:
-  `TS_OAUTH_MEDIACENTER_CLIENT_ID` / `TS_OAUTH_MEDIACENTER_CLIENT_SECRET`.
+- `tag:ci-runner` — `tailscale/github-action` joins the runner to the tailnet.
+  Secrets: `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_CLIENT_SECRET`.
+- `tag:mediacenter` — Terraform's `tailscale` provider mints the VM join key
+  via `tailscale_tailnet_key`. Secrets: `TS_OAUTH_MEDIACENTER_CLIENT_ID` /
+  `TS_OAUTH_MEDIACENTER_CLIENT_SECRET`.
 
-Originally one client covered both tags, since both uses were assumed to
-share credentials the same way the ssh-rule tags do. Hit a real Tailscale
-bug: an OAuth client scoped to 2+ tags rejects any request that asks for
-only a subset of them (`"requested tags [tag:X] are invalid or not
-permitted"`), and neither caller here ever requests both tags at once. See
-[tailscale/terraform-provider-tailscale#437](https://github.com/tailscale/terraform-provider-tailscale/issues/437).
-Splitting into two single-tag clients avoids it.
+Not one shared client: a client scoped to 2+ tags rejects a request for a
+subset, and neither caller requests both
+([terraform-provider-tailscale#437](https://github.com/tailscale/terraform-provider-tailscale/issues/437)).
 
 ## Key expiry
 
-**Disabled** for `pve`, `rpi`, and `vps` (per-node setting in the admin console, Machines list). With Tailscale SSH as the access path, an expired node key means total lockout.
+**Disabled** for `pve`, `rpi`, `vps` (per-node, Machines list). With Tailscale
+SSH as the access path, an expired node key means total lockout.
