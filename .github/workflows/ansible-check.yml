@@ -17,6 +17,7 @@ jobs:
       docker: ${{ steps.filter.outputs.docker }}
       portainer: ${{ steps.filter.outputs.portainer }}
       caddy: ${{ steps.filter.outputs.caddy }}
+      jellyfin: ${{ steps.filter.outputs.jellyfin }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +37,8 @@ jobs:
             caddy:
               - 'ansible/playbooks/caddy.yml'
               - 'ansible/playbooks/templates/**'
+            jellyfin:
+              - 'ansible/playbooks/jellyfin.yml'
 
   check:
     needs: changes
@@ -77,6 +80,7 @@ jobs:
             [ "${{ needs.changes.outputs.docker }}" = "true" ] && LIST="$LIST ansible/playbooks/docker.yml"
             [ "${{ needs.changes.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
             [ "${{ needs.changes.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
+            [ "${{ needs.changes.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
             echo "list=$LIST" >> "$GITHUB_OUTPUT"
           fi
 

@@ -110,8 +110,25 @@ clients — see `setup/tailscale.md` (`OAuth clients`).
 - Tailnet ACL, `production` environment, branch protection — see
   `setup/tailscale.md` and `setup/github.md`.
 
+## Jellyfin
+
+`ansible/playbooks/jellyfin.yml` (targets `mediacenter`) formats and mounts the
+two data disks and installs Jellyfin with Intel iGPU transcoding:
+
+- Disks are `ext4`, whole-disk, labeled and mounted by `LABEL=` (fstab). Device
+  identity uses stable `/dev/disk/by-id/scsi-…drive-scsiN` paths — Linux `sdX`
+  order is inverted vs the SCSI index. `scsi2` (850G SSD) -> `/mnt/fast-store`,
+  `scsi1` (4.2T HDD) -> `/mnt/bulk-store`; map is in `host_vars/mediacenter.yaml`.
+- Folders: `fast-store/{app-data,downloads}`, `bulk-store/media/{,movies,tv}`,
+  created `root:root 0755`.
+- iGPU: installs the Intel VAAPI/QSV drivers and adds the `jellyfin` user to
+  `render`/`video`. Enable **VAAPI** once in Dashboard -> Playback -> Transcoding
+  (device `/dev/dri/renderD128`) — not seeded by Ansible.
+- Reverse proxy + DNS already route `jellyfin.<domain>` to `:8096` (see
+  `caddy.md`, `cloudflare.md`); no changes needed there.
+
 ## Out of scope
 
-- `scsi1`/`scsi2` are attached raw — not partitioned, formatted, or mounted, and
-  no folder layout exists. Formatting/mounting, folder layout, and Jellyfin + arr
-  install are follow-on Ansible work.
+- arr stack: a `docker` user will own `media`/`app-data`/`downloads`, with
+  `jellyfin` granted read on `media`. Media-dir ownership stays `root:root` until
+  then.
