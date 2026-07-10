@@ -53,6 +53,8 @@ jobs:
           TAILSCALE_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_ID }}
           TAILSCALE_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_SECRET }}
           TF_VAR_pve_host: ${{ secrets.PVE_TAILSCALE_HOST }}
+          # Transitional: lets infra destroy the pre-split DNS records still in its state
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           export PROXMOX_VE_SSH_PRIVATE_KEY="$(cat "${RUNNER_TEMP}/tf_ssh_key")"
           terraform -chdir=terraform/infra init
