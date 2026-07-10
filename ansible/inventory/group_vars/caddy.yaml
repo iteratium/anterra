@@ -1,0 +1,16 @@
+---
+internal_reverse_proxy_records:
+  - domain: portainer.{{ domain_name }}
+    upstream: "https://mediacenter.tailb3a7a.ts.net:9443"
+    tls_skip_verify: true
+  - domain: pve.{{ domain_name }}
+    upstream: "https://pve.tailb3a7a.ts.net:8006"
+    tls_skip_verify: true
+  - domain: ui.{{ domain_name }}
+    upstream: "https://{{ unifi_console_ip }}:443"
+    tls_skip_verify: true
+
+external_reverse_proxy_records:
+  - domain: jellyfin.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8096"
+...

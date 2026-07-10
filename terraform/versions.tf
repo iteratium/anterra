@@ -14,6 +14,10 @@ terraform {
       source  = "bpg/proxmox"
       version = "0.111.1"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5"
+    }
     tailscale = {
       source  = "tailscale/tailscale"
       version = "0.29.2"

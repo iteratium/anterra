@@ -108,3 +108,9 @@ All secrets stored exclusively on Github Secrets
 | `TS_OAUTH_MEDIACENTER_CLIENT_ID` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |
 | `TS_OAUTH_MEDIACENTER_CLIENT_SECRET` | Tailscale OAuth client, scoped to `tag:mediacenter` — mints the mediacenter VM's join key |
 | `PVE_TAILSCALE_HOST` | `pve`'s Tailscale MagicDNS hostname — Proxmox provider `endpoint` and SSH target, kept out of committed `.tf` files |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token — Caddy DNS-01 ACME (rpi, vps) and Terraform `cloudflare` provider |
+| `CLOUDFLARE_ZONE_ID` | Cloudflare zone ID — Terraform DNS record management |
+| `BASE_DOMAIN` | Base domain — Ansible Caddy records and Terraform DNS record names |
+| `RPI_TAILSCALE_IP` | rpi Tailscale IP — Terraform A-record target for internal services |
+| `VPS_PUBLIC_IP` | vps public IP — Terraform A-record target for external services |
+| `UNIFI_CONSOLE_IP` | Unifi console LAN IP — Caddy upstream for the `ui` record (Ansible) |

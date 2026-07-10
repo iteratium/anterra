@@ -14,6 +14,10 @@ all:
         mediacenter:
         rpi:
         vps:
+    caddy:
+      hosts:
+        rpi:
+        vps:
     portainer_server:
       hosts:
         mediacenter:
