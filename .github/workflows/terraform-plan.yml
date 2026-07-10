@@ -34,13 +34,7 @@ jobs:
 
       - name: Generate ephemeral SSH keypair for Proxmox snippet upload
         if: steps.filter.outputs.infra == 'true'
-        run: |
-          ssh-keygen -t ed25519 -N "" -f "${RUNNER_TEMP}/tf_ssh_key"
-          {
-            echo "PROXMOX_VE_SSH_PRIVATE_KEY<<EOF"
-            cat "${RUNNER_TEMP}/tf_ssh_key"
-            echo "EOF"
-          } >> "$GITHUB_ENV"
+        run: ssh-keygen -t ed25519 -N "" -f "${RUNNER_TEMP}/tf_ssh_key"
 
       - uses: hashicorp/setup-terraform@v3
         with:
@@ -56,6 +50,7 @@ jobs:
           TAILSCALE_OAUTH_CLIENT_SECRET: ${{ secrets.TS_OAUTH_MEDIACENTER_CLIENT_SECRET }}
           TF_VAR_pve_host: ${{ secrets.PVE_TAILSCALE_HOST }}
         run: |
+          export PROXMOX_VE_SSH_PRIVATE_KEY="$(cat "${RUNNER_TEMP}/tf_ssh_key")"
           terraform -chdir=terraform/infra init
           terraform -chdir=terraform/infra plan -no-color
 
