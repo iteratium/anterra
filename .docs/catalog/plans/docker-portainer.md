@@ -45,9 +45,11 @@ The playbook only deploys containers. After first apply, at
 
 1. Create the admin user.
 2. Apply the free Business Edition license (covers 3 nodes — exactly this fleet).
-3. Add environments → Agent, one per host, using the tailnet address:
-   `rpi.tailb3a7a.ts.net:9001` and `vps.tailb3a7a.ts.net:9001`. This assigns
-   the endpoint ids in the Layout table above.
+3. Add environments → Docker Standalone → Agent, one per host, using the
+   tailnet IP: `<host-100.x>:9001`. Use the IP, not the MagicDNS name —
+   MagicDNS does not resolve inside the Portainer container (its resolver is the
+   LAN DNS, not `100.100.100.100`). This assigns the endpoint ids in the Layout
+   table above.
 
 ## Out of scope
 
