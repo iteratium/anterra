@@ -3,10 +3,17 @@ locals {
     "portainer",
     "pve",
     "ui",
+    "qbittorrent",
+    "radarr",
+    "sonarr",
+    "prowlarr",
+    "profilarr",
+    "flaresolverr",
   ])
 
   external_services = {
     jellyfin = { proxied = false }
+    seerr    = { proxied = false }
   }
 }
 

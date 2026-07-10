@@ -1,0 +1,52 @@
+# Arr stack
+
+Download/automation stack on `mediacenter`, deployed as a Portainer-managed stack
+via Terraform (`terraform/portainer/`). All apps share one gluetun (AirVPN /
+WireGuard) network namespace; if the VPN drops, every app loses network.
+
+## Apps and ports
+
+| App | Port | Subdomain | Exposure |
+|---|---|---|---|
+| qbittorrent | 8585 | `qbittorrent` | internal (rpi Caddy) |
+| radarr | 7878 | `radarr` | internal |
+| sonarr | 8989 | `sonarr` | internal |
+| prowlarr | 9696 | `prowlarr` | internal |
+| profilarr | 6868 | `profilarr` | internal |
+| flaresolverr | 8191 | `flaresolverr` | internal |
+| seerr | 5055 | `seerr` | external (vps Caddy) |
+
+Ports are published on the gluetun container (mediacenter host). Caddy reaches them
+over the tailnet at `mediacenter.<tailnet>:<port>`; gluetun's
+`FIREWALL_OUTBOUND_SUBNETS` must include the tailnet (`100.64.0.0/10`) and docker
+bridge (`172.16.0.0/12`) or the WebUIs are unreachable through the killswitch.
+qbittorrent's listen port must be set to the AirVPN forwarded port.
+
+## Storage and ownership
+
+- config -> `/mnt/fast-store/app-data/<app>` (SSD)
+- downloads/seeding -> `/mnt/fast-store/downloads` (SSD)
+- media -> `/mnt/bulk-store/media/{movies,tv}` (USB HDD)
+
+No hardlinks and no mergerfs: downloads stay on the SSD, so seeding never touches the
+HDD. Import copies SSD->HDD once per file; the HDD is written once and never seeds.
+
+Ownership (Ansible `ansible/playbooks/arr-storage.yml`): user `docker` (uid 1500),
+group `media` (gid 1500) own all three trees, mode `2775` (setgid). Containers run as
+`PUID/PGID=1500`. `jellyfin` is added to the `media` group for read access —
+deliberately not the host `docker` group, which is root-equivalent via the docker
+socket.
+
+## One-time bootstrap
+
+1. Portainer UI: generate an API token (`PORTAINER_API_KEY`); note the mediacenter
+   (local) endpoint id (`mediacenter_endpoint_id` tfvar, default 2).
+2. AirVPN client area: generate a WireGuard config (private key, preshared key,
+   addresses) and a forwarded port.
+3. After first deploy, configure each app once: qbittorrent (creds, save path
+   `/downloads/complete`, listen port = forwarded port); prowlarr -> radarr/sonarr +
+   flaresolverr proxy; seerr linked to Jellyfin + radarr/sonarr; profilarr sync/push.
+
+## Verify VPN killswitch
+
+`docker exec gluetun wget -qO- ifconfig.io` must return the AirVPN exit IP.

@@ -13,7 +13,3 @@ provider "proxmox" {
 }
 
 provider "tailscale" {}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
-}

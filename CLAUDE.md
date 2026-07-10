@@ -114,3 +114,11 @@ All secrets stored exclusively on Github Secrets
 | `RPI_TAILSCALE_IP` | rpi Tailscale IP — Terraform A-record target for internal services |
 | `VPS_PUBLIC_IP` | vps public IP — Terraform A-record target for external services |
 | `UNIFI_CONSOLE_IP` | Unifi console LAN IP — Caddy upstream for the `ui` record (Ansible) |
+| `PORTAINER_API_KEY` | Portainer API access token — `portainer` provider auth (Terraform portainer workspace) |
+| `WIREGUARD_PRIVATE_KEY` | AirVPN WireGuard private key — gluetun (arr stack) |
+| `WIREGUARD_PRESHARED_KEY` | AirVPN WireGuard preshared key — gluetun (arr stack) |
+| `WIREGUARD_ADDRESSES` | AirVPN WireGuard interface addresses — gluetun (arr stack) |
+| `AIRVPN_FORWARDED_PORT` | AirVPN forwarded port — qbittorrent inbound via gluetun |
+| `PROFILARR_PAT` | Profilarr personal access token — optional, private profiles repo |
+| `GIT_USER_NAME` | Profilarr git user name — optional |
+| `GIT_USER_EMAIL` | Profilarr git user email — optional |
