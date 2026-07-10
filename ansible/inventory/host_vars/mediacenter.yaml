@@ -1,3 +1,10 @@
 ---
 ansible_host: mediacenter.tailb3a7a.ts.net
+media_disks:
+  - label: fast-store
+    device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi2
+    mountpoint: /mnt/fast-store
+  - label: bulk-store
+    device: /dev/disk/by-id/scsi-0QEMU_QEMU_HARDDISK_drive-scsi1
+    mountpoint: /mnt/bulk-store
 ...
