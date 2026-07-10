@@ -44,7 +44,7 @@ jobs:
         if: always()
         run: |
           set -o pipefail
-          ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff 2>&1 | tee "${RUNNER_TEMP}/check.log"
+          ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff --extra-vars "domain_name=${{ secrets.CADDY_DOMAIN }}" 2>&1 | tee "${RUNNER_TEMP}/check.log"
         continue-on-error: true
 
       - name: Build PR comment

@@ -1,0 +1,20 @@
+{% if inventory_hostname == 'rpi' %}
+{% set records = internal_reverse_proxy_records %}
+{% elif inventory_hostname == 'vps' %}
+{% set records = external_reverse_proxy_records %}
+{% else %}
+{% set records = [] %}
+{% endif %}
+{% for record in records %}
+{{ record.domain }} {
+{% if record.tls_skip_verify | default(false) %}
+    reverse_proxy {{ record.upstream }} {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+{% else %}
+    reverse_proxy {{ record.upstream }}
+{% endif %}
+}
+{% endfor %}

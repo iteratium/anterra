@@ -40,4 +40,4 @@ jobs:
           ansible-galaxy collection install -r ansible/requirements.yml
 
       - name: Ansible apply
-        run: ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml
+        run: ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --extra-vars "domain_name=${{ secrets.CADDY_DOMAIN }}"

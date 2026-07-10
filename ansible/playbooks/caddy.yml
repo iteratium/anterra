@@ -1,0 +1,36 @@
+---
+- name: Configure Caddy reverse proxies
+  hosts: caddy
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Ensure conf.d directory exists
+      ansible.builtin.file:
+        path: /etc/caddy/conf.d
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Ensure Caddyfile imports conf.d
+      ansible.builtin.lineinfile:
+        path: /etc/caddy/Caddyfile
+        line: import /etc/caddy/conf.d/*.caddy
+        state: present
+      notify: Reload Caddy
+
+    - name: Render managed reverse proxy records
+      ansible.builtin.template:
+        src: templates/reverse_proxy.caddy.j2
+        dest: /etc/caddy/conf.d/reverse_proxy.caddy
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Reload Caddy
+
+  handlers:
+    - name: Reload Caddy
+      ansible.builtin.systemd:
+        name: caddy
+        state: reloaded
+...
