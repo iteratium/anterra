@@ -42,9 +42,11 @@ jobs:
       - name: Ansible check (preview)
         id: check
         if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -o pipefail
-          ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff --extra-vars "domain_name=${{ secrets.CADDY_DOMAIN }}" 2>&1 | tee "${RUNNER_TEMP}/check.log"
+          ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff --extra-vars "domain_name=${{ secrets.BASE_DOMAIN }} unifi_console_ip=${{ secrets.UNIFI_CONSOLE_IP }}" 2>&1 | tee "${RUNNER_TEMP}/check.log"
         continue-on-error: true
 
       - name: Build PR comment

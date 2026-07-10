@@ -1,32 +1,144 @@
 ---
-- name: Configure Caddy reverse proxies
+- name: Install and configure Caddy
   hosts: caddy
   become: true
-  gather_facts: false
+  gather_facts: true
+  vars:
+    caddy_binary_path: /usr/bin/caddy
+    caddy_config_dir: /etc/caddy
+    caddy_conf_d_dir: /etc/caddy/conf.d
+    caddy_data_dir: /var/lib/caddy
+    caddy_caddyfile_path: /etc/caddy/Caddyfile
+    caddy_cloudflare_token_path: /etc/caddy/cloudflare_token
+    caddy_cloudflare_token: "{{ lookup('env', 'CLOUDFLARE_API_TOKEN', default='') }}"
+    caddy_arch_map:
+      x86_64: amd64
+      aarch64: arm64
+      armv7l: armv7
+    caddy_arch: "{{ caddy_arch_map[ansible_facts['architecture']] | default('amd64') }}"
+    caddy_download_url: "https://caddyserver.com/api/download?os=linux&arch={{ caddy_arch }}&p=github.com%2Fcaddy-dns%2Fcloudflare"
   tasks:
-    - name: Ensure conf.d directory exists
+    - name: Create caddy system group
+      ansible.builtin.group:
+        name: caddy
+        system: true
+        state: present
+
+    - name: Create caddy system user
+      ansible.builtin.user:
+        name: caddy
+        group: caddy
+        system: true
+        shell: /usr/sbin/nologin
+        home: "{{ caddy_data_dir }}"
+        create_home: true
+        comment: Caddy web server
+        state: present
+
+    - name: Create Caddy configuration directory
       ansible.builtin.file:
-        path: /etc/caddy/conf.d
+        path: "{{ caddy_config_dir }}"
         state: directory
         owner: root
         group: root
         mode: "0755"
 
-    - name: Ensure Caddyfile imports conf.d
-      ansible.builtin.lineinfile:
-        path: /etc/caddy/Caddyfile
-        line: import /etc/caddy/conf.d/*.caddy
-        state: present
+    - name: Create Caddy conf.d directory
+      ansible.builtin.file:
+        path: "{{ caddy_conf_d_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Create Caddy data directory
+      ansible.builtin.file:
+        path: "{{ caddy_data_dir }}"
+        state: directory
+        owner: caddy
+        group: caddy
+        mode: "0750"
+
+    - name: Download Caddy binary with Cloudflare DNS plugin
+      ansible.builtin.get_url:
+        url: "{{ caddy_download_url }}"
+        dest: "{{ caddy_binary_path }}"
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Write Cloudflare API token for Caddy
+      ansible.builtin.copy:
+        content: "CLOUDFLARE_API_TOKEN={{ caddy_cloudflare_token }}"
+        dest: "{{ caddy_cloudflare_token_path }}"
+        owner: caddy
+        group: caddy
+        mode: "0400"
+      no_log: true
+
+    - name: Write base Caddyfile
+      ansible.builtin.copy:
+        content: |
+          {
+            acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+          }
+
+          import /etc/caddy/conf.d/*.caddy
+        dest: "{{ caddy_caddyfile_path }}"
+        owner: root
+        group: root
+        mode: "0644"
       notify: Reload Caddy
 
     - name: Render managed reverse proxy records
       ansible.builtin.template:
         src: templates/reverse_proxy.caddy.j2
-        dest: /etc/caddy/conf.d/reverse_proxy.caddy
+        dest: "{{ caddy_conf_d_dir }}/reverse_proxy.caddy"
         owner: root
         group: root
         mode: "0644"
       notify: Reload Caddy
+
+    - name: Create Caddy systemd service
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Caddy
+          Documentation=https://caddyserver.com/docs/
+          After=network.target network-online.target
+          Requires=network-online.target
+
+          [Service]
+          Type=notify
+          User=caddy
+          Group=caddy
+          ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+          ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force
+          TimeoutStopSec=5s
+          LimitNOFILE=1048576
+          PrivateTmp=true
+          ProtectSystem=full
+          AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
+          EnvironmentFile={{ caddy_cloudflare_token_path }}
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/caddy.service
+        owner: root
+        group: root
+        mode: "0644"
+      register: caddy_service_file
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+      when: caddy_service_file.changed
+
+    - name: Enable and start Caddy service
+      ansible.builtin.systemd:
+        name: caddy
+        enabled: true
+        state: started
 
   handlers:
     - name: Reload Caddy
