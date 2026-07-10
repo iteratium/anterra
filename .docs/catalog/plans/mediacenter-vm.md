@@ -112,7 +112,6 @@ clients — see `setup/tailscale.md` (`OAuth clients`).
 
 ## Out of scope
 
-- Ansible: inventory entry and `site.yml` targeting deferred.
 - `scsi1`/`scsi2` are attached raw — not partitioned, formatted, or mounted, and
   no folder layout exists. Formatting/mounting, folder layout, and Jellyfin + arr
   install are follow-on Ansible work.

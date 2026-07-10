@@ -1,0 +1,12 @@
+name: Ansible Check (stub)
+
+on:
+  pull_request:
+    paths-ignore:
+      - ansible/**
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No ansible/ changes in this PR; check not required."

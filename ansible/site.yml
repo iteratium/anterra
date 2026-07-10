@@ -5,4 +5,7 @@
   tasks:
     - name: Ping
       ansible.builtin.ping:
+
+- import_playbook: playbooks/docker.yml
+- import_playbook: playbooks/portainer.yml
 ...

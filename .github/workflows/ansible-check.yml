@@ -1,0 +1,67 @@
+name: Ansible Check
+
+on:
+  pull_request:
+    paths:
+      - ansible/**
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+          tags: tag:ci-runner
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Ansible
+        run: pip install ansible
+
+      - name: Install Galaxy dependencies
+        run: |
+          ansible-galaxy install -r ansible/requirements.yml
+          ansible-galaxy collection install -r ansible/requirements.yml
+
+      - name: Syntax check
+        run: ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --syntax-check
+
+      - name: Connectivity check
+        run: ansible -i ansible/inventory/hosts.yaml all -m ping
+
+      - name: Ansible check (preview)
+        id: check
+        if: always()
+        run: |
+          set -o pipefail
+          ansible-playbook -i ansible/inventory/hosts.yaml ansible/site.yml --check --diff 2>&1 | tee "${RUNNER_TEMP}/check.log"
+        continue-on-error: true
+
+      - name: Build PR comment
+        if: always()
+        run: |
+          {
+            echo "### Ansible Check (preview)"
+            echo
+            echo "\`--check --diff\` is advisory — first-time installs report failures that a real apply resolves (a repo must be added before its packages are visible). The hard gates are the syntax and connectivity checks above."
+            echo
+            echo '```'
+            cat "${RUNNER_TEMP}/check.log" 2>/dev/null || echo "(preview did not run)"
+            echo '```'
+          } > "${RUNNER_TEMP}/comment.md"
+
+      - uses: marocchino/sticky-pull-request-comment@v3
+        if: always()
+        with:
+          header: ansible-check
+          path: ${{ runner.temp }}/comment.md

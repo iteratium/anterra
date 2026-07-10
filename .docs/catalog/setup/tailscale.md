@@ -80,6 +80,23 @@ Fix: tag `pve` and `rpi` with `tag:fleet-host` so the rule reaches them via
 `dst: ["tag:fleet-host", ...]`. Applied per-device in the admin console
 (**Machines** → device → **…** → **Edit ACL tags**).
 
+## Device tags and MagicDNS names
+
+Confirmed applied state (`tailscale status --json`, `.Self.Tags` / `.DNSName`):
+
+| Device | MagicDNS name | Tag |
+|---|---|---|
+| pve | pve.tailb3a7a.ts.net | `tag:fleet-host` |
+| rpi | rpi.tailb3a7a.ts.net | `tag:fleet-host` |
+| vps | vps.tailb3a7a.ts.net | `tag:peer-relay` |
+| mediacenter | mediacenter.tailb3a7a.ts.net | `tag:mediacenter` |
+
+All four are covered by the `tag:ci-runner` SSH `dst` (`tag:fleet-host`,
+`tag:peer-relay`, `tag:mediacenter`), so CI reaches every host as `root`.
+
+`vps`'s OS hostname is `gcvpssg`; its tailnet device name (and MagicDNS name) is
+`vps` — Ansible inventory targets the MagicDNS name, not the OS hostname.
+
 ## OAuth clients
 
 Two single-tag OAuth clients (Auth Keys: Write), not one scoped to both:
