@@ -5,12 +5,17 @@ Container runtime and management for the workload hosts. Deployed by
 
 ## Layout
 
-| Host | Docker | Portainer |
-|---|---|---|
-| mediacenter | yes | server (BE) |
-| rpi | yes | agent |
-| vps | yes | agent |
-| pve | no (hypervisor) | no |
+| Host | Docker | Portainer | Endpoint id |
+|---|---|---|---|
+| mediacenter | yes | server (BE) | 2 |
+| rpi | yes | agent | 3 |
+| vps | yes | agent | 4 |
+| pve | no (hypervisor) | no | — |
+
+Endpoint ids are needed for any future `portainer_stack` Terraform resource
+targeting rpi or vps (mirroring `mediacenter_endpoint_id` in
+`terraform/portainer/variables.tf`) — not currently wired up as tfvars, see
+`watchtower.md` for why Watchtower went via Ansible instead.
 
 Inventory groups (`ansible/inventory/hosts.yaml`): `docker_hosts` (all three),
 `portainer_server` (mediacenter), `portainer_agents` (rpi, vps).
@@ -18,10 +23,20 @@ Inventory groups (`ansible/inventory/hosts.yaml`): `docker_hosts` (all three),
 ## Components
 
 - Docker Engine via the `geerlingguy.docker` Galaxy role (`ansible/requirements.yml`).
-- Portainer server: `portainer/portainer-ee:2.21.4`, UI on `9443`, `8000` for
+- Portainer server: `portainer/portainer-ee:2.43.0`, UI on `9443`, `8000` for
   edge tunnels, `portainer_data` volume.
-- Portainer agents: `portainer/agent:2.21.4`, listening on `9001`. Standard
-  agents — the server connects out to them over the tailnet.
+- Portainer agents: `portainer/agent:2.43.0`, listening on `9001`. Standard
+  agents — the server connects out to them over the tailnet. Keep the agent
+  version matched to the server version.
+
+## Trusted origins (CSRF, since 2.41)
+
+Portainer 2.41+ enforces CSRF protection: every hostname used to reach the UI
+must be listed as a full URL (scheme + optional port) or requests 403 /
+the server fails to start. The server container runs with
+`--trusted-origins=https://portainer.{{ domain_name }},https://{{ ansible_host }}:9443`
+covering both the Caddy-proxied hostname and the direct tailnet URL. Add any
+new hostname used to reach Portainer to this flag.
 
 ## One-time UI bootstrap
 
@@ -31,7 +46,8 @@ The playbook only deploys containers. After first apply, at
 1. Create the admin user.
 2. Apply the free Business Edition license (covers 3 nodes — exactly this fleet).
 3. Add environments → Agent, one per host, using the tailnet address:
-   `rpi.tailb3a7a.ts.net:9001` and `vps.tailb3a7a.ts.net:9001`.
+   `rpi.tailb3a7a.ts.net:9001` and `vps.tailb3a7a.ts.net:9001`. This assigns
+   the endpoint ids in the Layout table above.
 
 ## Out of scope
 

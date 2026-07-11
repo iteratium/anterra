@@ -1,0 +1,18 @@
+---
+- name: Deploy Watchtower
+  hosts: docker_hosts
+  gather_facts: false
+  tasks:
+    - name: Watchtower container
+      community.docker.docker_container:
+        name: watchtower
+        image: ghcr.io/nicholas-fedor/watchtower:latest
+        restart_policy: unless-stopped
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        env:
+          TZ: Asia/Kolkata
+          WATCHTOWER_LABEL_ENABLE: "true"
+          WATCHTOWER_SCHEDULE: "0 0 4 * * 1"
+          WATCHTOWER_CLEANUP: "true"
+...
