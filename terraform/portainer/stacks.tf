@@ -11,6 +11,7 @@ resource "portainer_stack" "arr" {
     docker_config_path      = var.config_path
     docker_downloads_path   = var.downloads_path
     docker_media_path       = var.media_path
+    domain_name             = var.domain_name
     server_countries        = var.server_countries
     outbound_subnets        = var.outbound_subnets
     vpn_input_port          = var.airvpn_forwarded_port
