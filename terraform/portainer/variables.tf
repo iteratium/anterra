@@ -87,22 +87,3 @@ variable "airvpn_forwarded_port" {
   description = "AirVPN forwarded port for qbittorrent inbound connections"
   sensitive   = true
 }
-
-variable "profilarr_pat" {
-  type        = string
-  description = "Profilarr personal access token (optional; leave empty if not syncing a private repo)"
-  sensitive   = true
-  default     = ""
-}
-
-variable "git_user_name" {
-  type        = string
-  description = "Profilarr git user name (optional)"
-  default     = ""
-}
-
-variable "git_user_email" {
-  type        = string
-  description = "Profilarr git user email (optional)"
-  default     = ""
-}

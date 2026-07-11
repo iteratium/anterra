@@ -16,6 +16,7 @@ jobs:
       shared: ${{ steps.filter.outputs.shared }}
       docker: ${{ steps.filter.outputs.docker }}
       portainer: ${{ steps.filter.outputs.portainer }}
+      watchtower: ${{ steps.filter.outputs.watchtower }}
       caddy: ${{ steps.filter.outputs.caddy }}
       jellyfin: ${{ steps.filter.outputs.jellyfin }}
       arr_storage: ${{ steps.filter.outputs.arr_storage }}
@@ -35,6 +36,8 @@ jobs:
               - 'ansible/playbooks/docker.yml'
             portainer:
               - 'ansible/playbooks/portainer.yml'
+            watchtower:
+              - 'ansible/playbooks/watchtower.yml'
             caddy:
               - 'ansible/playbooks/caddy.yml'
               - 'ansible/playbooks/templates/**'
@@ -82,6 +85,7 @@ jobs:
             LIST=""
             [ "${{ needs.changes.outputs.docker }}" = "true" ] && LIST="$LIST ansible/playbooks/docker.yml"
             [ "${{ needs.changes.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
+            [ "${{ needs.changes.outputs.watchtower }}" = "true" ] && LIST="$LIST ansible/playbooks/watchtower.yml"
             [ "${{ needs.changes.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
             [ "${{ needs.changes.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
             [ "${{ needs.changes.outputs.arr_storage }}" = "true" ] && LIST="$LIST ansible/playbooks/arr-storage.yml"

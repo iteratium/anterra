@@ -6,8 +6,10 @@
     - name: Portainer server container
       community.docker.docker_container:
         name: portainer
-        image: portainer/portainer-ee:2.21.4
+        image: portainer/portainer-ee:2.43.0
         restart_policy: unless-stopped
+        command:
+          - "--trusted-origins=https://portainer.{{ domain_name }},https://{{ ansible_host }}:9443"
         published_ports:
           - 9443:9443
           - 8000:8000
@@ -22,7 +24,7 @@
     - name: Portainer agent container
       community.docker.docker_container:
         name: portainer_agent
-        image: portainer/agent:2.21.4
+        image: portainer/agent:2.43.0
         restart_policy: unless-stopped
         published_ports:
           - 9001:9001

@@ -13,6 +13,7 @@ WireGuard) network namespace; if the VPN drops, every app loses network.
 | sonarr | 8989 | `sonarr` | internal |
 | prowlarr | 9696 | `prowlarr` | internal |
 | profilarr | 6868 | `profilarr` | internal |
+| profilarr-parser | 5000 (internal only) | — | not exposed |
 | flaresolverr | 8191 | `flaresolverr` | internal |
 | seerr | 5055 | `seerr` | external (vps Caddy) |
 
@@ -45,7 +46,10 @@ socket.
    addresses) and a forwarded port.
 3. After first deploy, configure each app once: qbittorrent (creds, save path
    `/downloads/complete`, listen port = forwarded port); prowlarr -> radarr/sonarr +
-   flaresolverr proxy; seerr linked to Jellyfin + radarr/sonarr; profilarr sync/push.
+   flaresolverr proxy; seerr linked to Jellyfin + radarr/sonarr; profilarr linked to a
+   custom-format database (e.g. Dictionarry) and synced to radarr/sonarr. The
+   `profilarr-parser` sidecar is only needed for testing custom formats/quality
+   profiles before applying them.
 
 ## Verify VPN killswitch
 
@@ -62,3 +66,16 @@ socket.
   seerr at mediacenter's own Tailscale IP (`tailscale ip -4`) on port 8096. The MagicDNS
   name does not resolve inside the gluetun namespace, and the public hostname hairpins
   out through the VPN.
+- qbittorrent: bind to VPN-only in its own settings too (Advanced -> Network
+  Interface -> `tun0`, the interface gluetun's WireGuard tunnel creates) as
+  defense-in-depth on top of gluetun's kill-switch.
+
+## Auto-updates (Watchtower)
+
+Every service in this stack, including gluetun, carries
+`com.centurylinklabs.watchtower.enable=true`. Watchtower (see
+[watchtower.md](watchtower.md)) runs in label-scoped mode, so only labelled
+containers are touched, checking weekly. Watchtower detects `network_mode:
+service:gluetun` as an implicit dependency link: when gluetun has an update, it
+stops the dependents, updates and restarts gluetun, then recreates the
+dependents on the new network namespace — no manual restart ordering needed.

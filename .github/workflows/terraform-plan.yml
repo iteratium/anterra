@@ -101,9 +101,6 @@ jobs:
           TF_VAR_wireguard_preshared_key: ${{ secrets.WIREGUARD_PRESHARED_KEY }}
           TF_VAR_wireguard_addresses: ${{ secrets.WIREGUARD_ADDRESSES }}
           TF_VAR_airvpn_forwarded_port: ${{ secrets.AIRVPN_FORWARDED_PORT }}
-          TF_VAR_profilarr_pat: ${{ secrets.PROFILARR_PAT }}
-          TF_VAR_git_user_name: ${{ secrets.GIT_USER_NAME }}
-          TF_VAR_git_user_email: ${{ secrets.GIT_USER_EMAIL }}
         run: |
           terraform -chdir=terraform/portainer init
           terraform -chdir=terraform/portainer plan -no-color

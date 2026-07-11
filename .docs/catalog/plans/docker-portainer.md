@@ -18,10 +18,20 @@ Inventory groups (`ansible/inventory/hosts.yaml`): `docker_hosts` (all three),
 ## Components
 
 - Docker Engine via the `geerlingguy.docker` Galaxy role (`ansible/requirements.yml`).
-- Portainer server: `portainer/portainer-ee:2.21.4`, UI on `9443`, `8000` for
+- Portainer server: `portainer/portainer-ee:2.43.0`, UI on `9443`, `8000` for
   edge tunnels, `portainer_data` volume.
-- Portainer agents: `portainer/agent:2.21.4`, listening on `9001`. Standard
-  agents — the server connects out to them over the tailnet.
+- Portainer agents: `portainer/agent:2.43.0`, listening on `9001`. Standard
+  agents — the server connects out to them over the tailnet. Keep the agent
+  version matched to the server version.
+
+## Trusted origins (CSRF, since 2.41)
+
+Portainer 2.41+ enforces CSRF protection: every hostname used to reach the UI
+must be listed as a full URL (scheme + optional port) or requests 403 /
+the server fails to start. The server container runs with
+`--trusted-origins=https://portainer.{{ domain_name }},https://{{ ansible_host }}:9443`
+covering both the Caddy-proxied hostname and the direct tailnet URL. Add any
+new hostname used to reach Portainer to this flag.
 
 ## One-time UI bootstrap
 

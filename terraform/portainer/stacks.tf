@@ -17,8 +17,5 @@ resource "portainer_stack" "arr" {
     wireguard_private_key   = var.wireguard_private_key
     wireguard_preshared_key = var.wireguard_preshared_key
     wireguard_addresses     = var.wireguard_addresses
-    profilarr_pat           = var.profilarr_pat
-    git_user_name           = var.git_user_name
-    git_user_email          = var.git_user_email
   })
 }

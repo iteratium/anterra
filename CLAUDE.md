@@ -119,6 +119,3 @@ All secrets stored exclusively on Github Secrets
 | `WIREGUARD_PRESHARED_KEY` | AirVPN WireGuard preshared key — gluetun (arr stack) |
 | `WIREGUARD_ADDRESSES` | AirVPN WireGuard interface addresses — gluetun (arr stack) |
 | `AIRVPN_FORWARDED_PORT` | AirVPN forwarded port — qbittorrent inbound via gluetun |
-| `PROFILARR_PAT` | Profilarr personal access token — optional, private profiles repo |
-| `GIT_USER_NAME` | Profilarr git user name — optional |
-| `GIT_USER_EMAIL` | Profilarr git user email — optional |

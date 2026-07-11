@@ -31,6 +31,8 @@ services:
       - "9696:9696/tcp"
       - "6868:6868/tcp"
       - "8191:8191/tcp"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   qbittorrent:
@@ -46,6 +48,8 @@ services:
     volumes:
       - ${docker_config_path}/qbittorrent:/config
       - ${docker_downloads_path}:/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   seerr:
@@ -65,6 +69,8 @@ services:
       timeout: 3s
       interval: 15s
       retries: 3
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   prowlarr:
@@ -78,6 +84,8 @@ services:
       - TZ=${docker_timezone}
     volumes:
       - ${docker_config_path}/prowlarr:/config
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   flaresolverr:
@@ -88,6 +96,8 @@ services:
     environment:
       - LOG_LEVEL=info
       - TZ=${docker_timezone}
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   radarr:
@@ -103,6 +113,8 @@ services:
       - ${docker_config_path}/radarr:/config
       - ${docker_media_path}/movies:/movies
       - ${docker_downloads_path}:/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   sonarr:
@@ -118,18 +130,32 @@ services:
       - ${docker_config_path}/sonarr:/config
       - ${docker_media_path}/tv:/tv
       - ${docker_downloads_path}:/downloads
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
 
   profilarr:
-    image: santiagosayshey/profilarr:latest
+    image: ghcr.io/dictionarry-hub/profilarr:latest
     container_name: profilarr
     network_mode: "service:gluetun"
     depends_on: [gluetun]
     volumes:
       - ${docker_config_path}/profilarr:/config
     environment:
+      - PUID=${docker_user_puid}
+      - PGID=${docker_user_pgid}
       - TZ=${docker_timezone}
-      - GIT_USER_NAME=${git_user_name}
-      - GIT_USER_EMAIL=${git_user_email}
-      - PROFILARR_PAT=${profilarr_pat}
+      - PARSER_HOST=localhost
+      - PARSER_PORT=5000
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: always
+
+  profilarr-parser:
+    image: ghcr.io/dictionarry-hub/profilarr-parser:latest
+    container_name: profilarr-parser
+    network_mode: "service:gluetun"
+    depends_on: [gluetun]
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     restart: always
