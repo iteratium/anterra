@@ -145,6 +145,7 @@ services:
       - PUID=${docker_user_puid}
       - PGID=${docker_user_pgid}
       - TZ=${docker_timezone}
+      - ORIGIN=https://profilarr.${domain_name}
       - PARSER_HOST=localhost
       - PARSER_PORT=5000
     labels:
