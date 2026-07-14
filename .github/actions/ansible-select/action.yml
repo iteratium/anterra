@@ -1,0 +1,46 @@
+name: Select Ansible playbooks
+description: Determine which playbooks to run from the changed paths in this event.
+outputs:
+  list:
+    description: Space-separated playbook paths, or ansible/site.yml when shared files changed.
+    value: ${{ steps.build.outputs.list }}
+runs:
+  using: composite
+  steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          shared:
+            - 'ansible/inventory/**'
+            - 'ansible/requirements.yml'
+            - 'ansible/site.yml'
+          docker:
+            - 'ansible/playbooks/docker.yml'
+          portainer:
+            - 'ansible/playbooks/portainer.yml'
+          watchtower:
+            - 'ansible/playbooks/watchtower.yml'
+          caddy:
+            - 'ansible/playbooks/caddy.yml'
+            - 'ansible/playbooks/templates/**'
+          jellyfin:
+            - 'ansible/playbooks/jellyfin.yml'
+          arr_storage:
+            - 'ansible/playbooks/arr-storage.yml'
+
+    - id: build
+      shell: bash
+      run: |
+        if [ "${{ steps.filter.outputs.shared }}" = "true" ]; then
+          echo "list=ansible/site.yml" >> "$GITHUB_OUTPUT"
+        else
+          LIST=""
+          [ "${{ steps.filter.outputs.docker }}" = "true" ] && LIST="$LIST ansible/playbooks/docker.yml"
+          [ "${{ steps.filter.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
+          [ "${{ steps.filter.outputs.watchtower }}" = "true" ] && LIST="$LIST ansible/playbooks/watchtower.yml"
+          [ "${{ steps.filter.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
+          [ "${{ steps.filter.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
+          [ "${{ steps.filter.outputs.arr_storage }}" = "true" ] && LIST="$LIST ansible/playbooks/arr-storage.yml"
+          echo "list=${LIST# }" >> "$GITHUB_OUTPUT"
+        fi
