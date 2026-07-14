@@ -15,85 +15,27 @@ permissions:
   contents: read
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      shared: ${{ steps.filter.outputs.shared }}
-      docker: ${{ steps.filter.outputs.docker }}
-      portainer: ${{ steps.filter.outputs.portainer }}
-      watchtower: ${{ steps.filter.outputs.watchtower }}
-      caddy: ${{ steps.filter.outputs.caddy }}
-      jellyfin: ${{ steps.filter.outputs.jellyfin }}
-      arr_storage: ${{ steps.filter.outputs.arr_storage }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            shared:
-              - 'ansible/inventory/**'
-              - 'ansible/roles/**'
-              - 'ansible/requirements.yml'
-              - 'ansible/site.yml'
-            docker:
-              - 'ansible/playbooks/docker.yml'
-            portainer:
-              - 'ansible/playbooks/portainer.yml'
-            watchtower:
-              - 'ansible/playbooks/watchtower.yml'
-            caddy:
-              - 'ansible/playbooks/caddy.yml'
-              - 'ansible/playbooks/templates/**'
-            jellyfin:
-              - 'ansible/playbooks/jellyfin.yml'
-            arr_storage:
-              - 'ansible/playbooks/arr-storage.yml'
-
   apply:
-    needs: changes
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 
-      - uses: tailscale/github-action@v4
+      - id: select
+        uses: ./.github/actions/ansible-select
+
+      - uses: ./.github/actions/ansible-setup
         with:
-          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
-          tags: tag:ci-runner
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Ansible
-        run: pip install ansible
-
-      - name: Install Galaxy dependencies
-        run: |
-          ansible-galaxy install -r ansible/requirements.yml
-          ansible-galaxy collection install -r ansible/requirements.yml
-
-      - name: Determine playbooks to run
-        id: playbooks
-        run: |
-          if [ "${{ needs.changes.outputs.shared }}" = "true" ]; then
-            echo "list=ansible/site.yml" >> "$GITHUB_OUTPUT"
-          else
-            LIST=""
-            [ "${{ needs.changes.outputs.docker }}" = "true" ] && LIST="$LIST ansible/playbooks/docker.yml"
-            [ "${{ needs.changes.outputs.portainer }}" = "true" ] && LIST="$LIST ansible/playbooks/portainer.yml"
-            [ "${{ needs.changes.outputs.watchtower }}" = "true" ] && LIST="$LIST ansible/playbooks/watchtower.yml"
-            [ "${{ needs.changes.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
-            [ "${{ needs.changes.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
-            [ "${{ needs.changes.outputs.arr_storage }}" = "true" ] && LIST="$LIST ansible/playbooks/arr-storage.yml"
-            echo "list=$LIST" >> "$GITHUB_OUTPUT"
-          fi
+          ts-oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          ts-oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
 
       - name: Ansible apply
-        if: steps.playbooks.outputs.list != ''
+        if: steps.select.outputs.list != ''
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: ansible-playbook -i ansible/inventory/hosts.yaml ${{ steps.playbooks.outputs.list }} --extra-vars "domain_name=${{ secrets.BASE_DOMAIN }} unifi_console_ip=${{ secrets.UNIFI_CONSOLE_IP }}"
+          BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
+          UNIFI_CONSOLE_IP: ${{ secrets.UNIFI_CONSOLE_IP }}
+        run: |
+          ansible-playbook -i ansible/inventory/hosts.yaml ${{ steps.select.outputs.list }} \
+            --extra-vars "domain_name=$BASE_DOMAIN unifi_console_ip=$UNIFI_CONSOLE_IP"

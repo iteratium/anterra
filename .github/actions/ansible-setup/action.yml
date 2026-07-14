@@ -1,0 +1,31 @@
+name: Set up Ansible
+description: Join the tailnet and install the pinned Ansible with its Galaxy dependencies.
+inputs:
+  ts-oauth-client-id:
+    description: Tailscale OAuth client ID (scoped to tag:ci-runner).
+    required: true
+  ts-oauth-secret:
+    description: Tailscale OAuth client secret.
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ inputs.ts-oauth-client-id }}
+        oauth-secret: ${{ inputs.ts-oauth-secret }}
+        tags: tag:ci-runner
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install Ansible
+      shell: bash
+      run: pip install ansible-core==2.21.1
+
+    - name: Install Galaxy dependencies
+      shell: bash
+      run: |
+        ansible-galaxy install -r ansible/requirements.yml
+        ansible-galaxy collection install -r ansible/requirements.yml

@@ -35,8 +35,11 @@ local state between runs, and it pairs natively with `terraform`.
 
 - **Targeting**: inventory points at Tailscale MagicDNS names / `100.x` IPs, not
   LAN IPs — the runner's only path is the tailnet.
-- **Entrypoint**: single `site.yml`. Trigger on any `ansible/**` change and run
-  the whole thing — cheap at 3 hosts, avoids change-detection logic.
+- **Entrypoint**: `site.yml`, but per-play selection avoids re-running
+  everything. A composite action (`.github/actions/ansible-select`) maps changed
+  paths (`dorny/paths-filter`) to the affected playbooks; a change to shared
+  files (`inventory/`, `requirements.yml`, `site.yml`) runs the full `site.yml`.
+  Check and apply share this action, so the path map lives in one place.
 - **PR gate**: hard-fail on `--syntax-check` and an all-hosts `ping`; these are
   the blocking checks (`check` job).
 - **PR preview**: `ansible-playbook --check --diff`, stdout captured into a
@@ -45,6 +48,26 @@ local state between runs, and it pairs natively with `terraform`.
   `terraform plan`: it reports failures for first-time installs (a repo must be
   added before its packages are visible) and shell/command tasks report
   inaccurately. Treat as preview, not guarantee.
+
+### Run performance
+
+Tasks run from a GitHub-hosted runner to fleet hosts over Tailscale, where
+per-task SSH setup dominated (~15s floor per task, even for no-op tasks).
+`ansible.cfg`:
+
+- **ControlPersist** (`ControlMaster=auto ControlPersist=60s`) reuses one SSH
+  connection across a host's tasks instead of reconnecting per task.
+- **Pipelining** (`pipelining = true`) collapses each task's several SSH
+  round-trips into one; safe because `ansible_user` is `root` (no `requiretty`).
+- **Fact caching** (`gathering = smart`, jsonfile) gathers facts once per run
+  instead of once per play (`site.yml` has five fact-gathering plays).
+
+### Reproducibility
+
+- CI installs a pinned `ansible-core`, not the floating `ansible` bundle;
+  collections come solely from `requirements.yml`, all version-pinned.
+- Tailnet join + install is a composite action
+  (`.github/actions/ansible-setup`) shared by check and apply.
 
 ## Trigger model
 
