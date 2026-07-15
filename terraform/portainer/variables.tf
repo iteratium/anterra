@@ -16,6 +16,42 @@ variable "mediacenter_endpoint_id" {
   default     = 2
 }
 
+variable "vps_endpoint_id" {
+  type        = number
+  description = "Portainer endpoint id for the vps environment"
+  default     = 4
+}
+
+variable "mediacenter_tailscale_ip" {
+  type        = string
+  description = "mediacenter Tailscale IP, bind address for the karakeep backend and the address karakeep-web dials"
+  sensitive   = true
+}
+
+variable "vps_tailscale_ip" {
+  type        = string
+  description = "vps Tailscale IP, bind address for karakeep-web"
+  sensitive   = true
+}
+
+variable "karakeep_nextauth_secret" {
+  type        = string
+  description = "Karakeep NEXTAUTH_SECRET, signs JWT session tokens"
+  sensitive   = true
+}
+
+variable "meili_master_key" {
+  type        = string
+  description = "Meilisearch master key, shared by the karakeep-backend and karakeep-web stacks"
+  sensitive   = true
+}
+
+variable "meili_version" {
+  type        = string
+  description = "Meilisearch image tag, pinned because upgrades need a manual dump/restore"
+  default     = "v1.41.0"
+}
+
 variable "docker_timezone" {
   type        = string
   description = "TZ for the arr containers"
