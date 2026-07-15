@@ -23,11 +23,19 @@ so both a DNS name and a MagicDNS name fail. This is also why there is no
 `chrome.ketwork.in` record. Meilisearch has no record either; MagicDNS covers
 the dashboard.
 
-`keep` is the only DNS record. It starts as an internal record (rpi Caddy,
-A -> rpi tailnet IP, unproxied) and moves to `external_services` +
-`external_reverse_proxy_records` (vps Caddy, A -> vps public IP, proxied) once
-signups are disabled. `NEXTAUTH_URL` is `https://keep.<domain>` from the start,
-so the move needs no container change.
+`keep` is the only DNS record: external, A -> vps public IP, proxied, served by
+vps Caddy from `http://vps.tailb3a7a.ts.net:9721`.
+
+It was bootstrapped as an internal record (rpi Caddy, A -> rpi tailnet IP) and
+moved to external only after signups were disabled, so the app was never
+publicly reachable while it accepted signups. `NEXTAUTH_URL` was set to the
+final URL from the start, so the move needed no container change. Do the same
+if signups are ever reopened.
+
+The flip is split across two applies on purpose: `terraform-apply` runs the
+cloudflare workspace before portainer, and `ansible-apply` fires concurrently
+on the same merge, so disabling signups in the same commit as the record move
+could publish the record before the container picks up the flag.
 
 ## Versions
 

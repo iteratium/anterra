@@ -9,11 +9,11 @@ locals {
     "prowlarr",
     "profilarr",
     "flaresolverr",
-    "keep",
   ])
 
   external_services = {
     jellyfin = { proxied = false }
+    keep     = { proxied = true }
     seerr    = { proxied = true }
   }
 }
