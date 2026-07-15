@@ -1,0 +1,24 @@
+name: Terraform Untaint
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  untaint:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Untaint karakeep stacks
+        run: |
+          terraform -chdir=terraform/portainer init
+          terraform -chdir=terraform/portainer untaint portainer_stack.karakeep_backend
+          terraform -chdir=terraform/portainer untaint portainer_stack.karakeep_web
