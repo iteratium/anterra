@@ -101,6 +101,10 @@ jobs:
           TF_VAR_wireguard_preshared_key: ${{ secrets.WIREGUARD_PRESHARED_KEY }}
           TF_VAR_wireguard_addresses: ${{ secrets.WIREGUARD_ADDRESSES }}
           TF_VAR_airvpn_forwarded_port: ${{ secrets.AIRVPN_FORWARDED_PORT }}
+          TF_VAR_mediacenter_tailscale_ip: ${{ secrets.MEDIACENTER_TAILSCALE_IP }}
+          TF_VAR_vps_tailscale_ip: ${{ secrets.VPS_TAILSCALE_IP }}
+          TF_VAR_karakeep_nextauth_secret: ${{ secrets.KARAKEEP_NEXTAUTH_SECRET }}
+          TF_VAR_meili_master_key: ${{ secrets.MEILI_MASTER_KEY }}
         run: |
           terraform -chdir=terraform/portainer init
           terraform -chdir=terraform/portainer plan -no-color

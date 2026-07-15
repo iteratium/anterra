@@ -1,0 +1,62 @@
+# Karakeep
+
+Bookmark manager, split across two hosts. Deployed as two Portainer stacks from
+`terraform/portainer/stacks.tf`.
+
+## Layout
+
+| Stack | Host | Containers | Bind |
+|---|---|---|---|
+| `karakeep-web` | vps | karakeep | `<vps-100.x>:9721` -> 3000 |
+| `karakeep-backend` | mediacenter | chrome, meilisearch | `<mediacenter-100.x>:9222`, `:7700` |
+
+The web app reaches chrome and meilisearch directly over the tailnet. Both
+backend containers bind to the tailnet IP only: chrome's CDP port is
+unauthenticated and must not be on the LAN, and the vps has no firewall
+(`ufw` inactive), so a `0.0.0.0` bind there would be world-reachable on 9721.
+
+## Addressing
+
+`BROWSER_WEB_URL` must use mediacenter's tailnet IP, not a hostname. Chrome's
+debug endpoint rejects any `Host` header that is not `localhost` or a bare IP,
+so both a DNS name and a MagicDNS name fail. This is also why there is no
+`chrome.ketwork.in` record. Meilisearch has no record either; MagicDNS covers
+the dashboard.
+
+`keep` is the only DNS record. It starts as an internal record (rpi Caddy,
+A -> rpi tailnet IP, unproxied) and moves to `external_services` +
+`external_reverse_proxy_records` (vps Caddy, A -> vps public IP, proxied) once
+signups are disabled. `NEXTAUTH_URL` is `https://keep.<domain>` from the start,
+so the move needs no container change.
+
+## Versions
+
+- karakeep: `:release`, Watchtower label set.
+- meilisearch: pinned. Upgrades need a manual dump/restore, so no Watchtower label.
+- chrome: pinned to `alpine-chrome:124`, matching upstream's compose. No Watchtower label.
+
+## Tailnet SSRF guard
+
+Karakeep blocks worker-initiated requests resolving to private, loopback,
+link-local, or Tailscale CGNAT addresses. If crawling or search indexing fails
+against the 100.x backends, set `CRAWLER_ALLOWED_INTERNAL_HOSTNAMES=.` on
+`karakeep-web`. If that does not resolve it, fall back to the
+[minimal install](https://docs.karakeep.app/installation/minimal-install)
+(no chrome, no meilisearch: no search, no screenshots).
+
+## Disabled
+
+AI tagging and summarization: no `OPENAI_API_KEY` set. Archival is off by
+default (`CRAWLER_FULL_PAGE_ARCHIVE`, `CRAWLER_FULL_PAGE_SCREENSHOT`,
+`CRAWLER_STORE_PDF`, `CRAWLER_VIDEO_DOWNLOAD`), which matters on the vps's
+25 GiB disk. Viewport screenshots and banner caching stay on.
+
+## Bootstrap
+
+`DISABLE_SIGNUPS=false` on first deploy. Create the account, flip it to `true`
+in `compose-files/karakeep-web.yaml.tpl`, then move the record to external.
+
+## Data
+
+Docker named volumes: `data` on vps (SQLite DB + assets), `meilisearch` on
+mediacenter. Meilisearch holds only a rebuildable index.

@@ -119,3 +119,7 @@ All secrets stored exclusively on Github Secrets
 | `WIREGUARD_PRESHARED_KEY` | AirVPN WireGuard preshared key — gluetun (arr stack) |
 | `WIREGUARD_ADDRESSES` | AirVPN WireGuard interface addresses — gluetun (arr stack) |
 | `AIRVPN_FORWARDED_PORT` | AirVPN forwarded port — qbittorrent inbound via gluetun |
+| `MEDIACENTER_TAILSCALE_IP` | mediacenter Tailscale IP — karakeep-backend bind address, dialled by karakeep-web |
+| `VPS_TAILSCALE_IP` | vps Tailscale IP — karakeep-web bind address |
+| `KARAKEEP_NEXTAUTH_SECRET` | Karakeep `NEXTAUTH_SECRET` — session JWT signing |
+| `MEILI_MASTER_KEY` | Meilisearch master key — shared by the karakeep-backend and karakeep-web stacks |

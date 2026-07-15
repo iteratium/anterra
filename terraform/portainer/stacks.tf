@@ -20,3 +20,31 @@ resource "portainer_stack" "arr" {
     wireguard_addresses     = var.wireguard_addresses
   })
 }
+
+resource "portainer_stack" "karakeep_backend" {
+  name            = "karakeep-backend"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.mediacenter_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/karakeep-backend.yaml.tpl", {
+    mediacenter_tailscale_ip = var.mediacenter_tailscale_ip
+    meili_master_key         = var.meili_master_key
+    meili_version            = var.meili_version
+  })
+}
+
+resource "portainer_stack" "karakeep_web" {
+  name            = "karakeep-web"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.vps_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/karakeep-web.yaml.tpl", {
+    domain_name              = var.domain_name
+    vps_tailscale_ip         = var.vps_tailscale_ip
+    mediacenter_tailscale_ip = var.mediacenter_tailscale_ip
+    nextauth_secret          = var.karakeep_nextauth_secret
+    meili_master_key         = var.meili_master_key
+  })
+}
