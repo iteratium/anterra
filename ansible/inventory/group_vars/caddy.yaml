@@ -21,12 +21,12 @@ internal_reverse_proxy_records:
     upstream: "http://mediacenter.tailb3a7a.ts.net:6868"
   - domain: flaresolverr.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8191"
-  - domain: keep.{{ domain_name }}
-    upstream: "http://vps.tailb3a7a.ts.net:9721"
 
 external_reverse_proxy_records:
   - domain: jellyfin.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8096"
+  - domain: keep.{{ domain_name }}
+    upstream: "http://vps.tailb3a7a.ts.net:9721"
   - domain: seerr.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:5055"
 ...
