@@ -53,8 +53,23 @@ default (`CRAWLER_FULL_PAGE_ARCHIVE`, `CRAWLER_FULL_PAGE_SCREENSHOT`,
 
 ## Bootstrap
 
-`DISABLE_SIGNUPS=false` on first deploy. Create the account, flip it to `true`
-in `compose-files/karakeep-web.yaml.tpl`, then move the record to external.
+Done. `DISABLE_SIGNUPS=false` on first deploy, account created, then flipped to
+`true`. Re-enable the same way to add users.
+
+## Portainer provider create race
+
+The provider fires an unconditional `PUT /stacks/{id}` right after create to
+apply `prune`/`pullImage`/`webhook`, even when all three are at their defaults.
+Portainer deploys asynchronously, so the PUT can land mid-deploy and get a 409;
+the provider retries only on 5xx, so the stack ends up tainted despite having
+deployed correctly. Both karakeep stacks hit this on first apply and had to be
+untainted out of band. Only create is affected -- the update path issues a
+single PUT.
+
+If a new stack lands tainted with `failed to finalize stack creation
+(prune/webhook)`, check the containers before touching anything: if they are
+healthy and match the stack file, untaint rather than re-apply, since a tainted
+resource makes every apply destroy and recreate the stack.
 
 ## Data
 

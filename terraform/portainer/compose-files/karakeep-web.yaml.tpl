@@ -10,7 +10,7 @@ services:
       - DATA_DIR=/data
       - NEXTAUTH_URL=https://keep.${domain_name}
       - NEXTAUTH_SECRET=${nextauth_secret}
-      - DISABLE_SIGNUPS=false
+      - DISABLE_SIGNUPS=true
       - MEILI_ADDR=http://${mediacenter_tailscale_ip}:7700
       - MEILI_MASTER_KEY=${meili_master_key}
       - BROWSER_WEB_URL=http://${mediacenter_tailscale_ip}:9222
