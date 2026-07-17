@@ -68,6 +68,28 @@ Added in both places `tag:peer-relay` appears:
 - SSH `dst`: `["autogroup:self", "tag:peer-relay", "tag:mediacenter"]` — needed so `group:fleet-admins` can Tailscale-SSH into it for ops/Ansible, same as the other fleet hosts.
 
 
+## `tag:kindle`
+
+The jailbroken Kindle e-reader (`kindle-tools` repo), joined via a reusable
+auth key generated directly in the admin console — user-owned tagging isn't
+possible (no user account on the device), same reasoning as
+`tag:mediacenter`. Added directly in the admin console (not through this
+repo): `tagOwners` entry, plus `tag:kindle` in the `ssh` block's `dst`
+alongside `tag:mediacenter`/`tag:peer-relay`. Key expiry disabled, same as
+the other fleet devices.
+
+This repo's copy trailed the live policy until now — recorded here per the
+usual "reference only, hand-synced" caveat (see the note under **SSH access
+policy** at the top of this doc).
+
+**No separate grant needed** for the Kindle to reach the TRMNL BYOS on
+`mediacenter` (`trmnl.md`): the live policy's `grants` block already has a
+catch-all `{"src": ["*"], "dst": ["*"], "ip": ["*"]}` entry, so every tailnet
+member (tagged or not) can already reach every port on every other member.
+The narrower `tag:kindle` -> `tag:mediacenter:2300` grant considered in
+`kindle-tools/plans/anterra-plan.md` would be redundant given that catch-all
+— confirmed live, 2026-07-17.
+
 ## `tag:ci-runner` and `tag:fleet-host`
 
 The ephemeral GitHub Actions runner (`plans/ci-cd.md`) joins as
