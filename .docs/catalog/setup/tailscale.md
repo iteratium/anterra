@@ -68,6 +68,33 @@ Added in both places `tag:peer-relay` appears:
 - SSH `dst`: `["autogroup:self", "tag:peer-relay", "tag:mediacenter"]` — needed so `group:fleet-admins` can Tailscale-SSH into it for ops/Ansible, same as the other fleet hosts.
 
 
+## `tag:kindle`
+
+The jailbroken Kindle e-reader (`kindle-tools` repo), joined via a reusable
+auth key generated directly in the admin console — user-owned tagging isn't
+possible (no user account on the device), same reasoning as
+`tag:mediacenter`. Added directly in the admin console (not through this
+repo): `tagOwners` entry, plus `tag:kindle` in the `ssh` block's `dst`
+alongside `tag:mediacenter`/`tag:peer-relay`. Key expiry disabled, same as
+the other fleet devices.
+
+This repo's copy trailed the live policy until now — recorded here per the
+usual "reference only, hand-synced" caveat (see the note under **SSH access
+policy** at the top of this doc).
+
+**Grant needed** (not yet added to the live policy as of this doc): the
+Kindle pulls its e-ink dashboard from the TRMNL BYOS on `mediacenter`
+(`trmnl.md`), so it needs to reach that port. No reverse grant —
+`mediacenter` never initiates to the Kindle.
+
+```jsonc
+{
+  "action": "accept",
+  "src":    ["tag:kindle"],
+  "dst":    ["tag:mediacenter:2300"],
+}
+```
+
 ## `tag:ci-runner` and `tag:fleet-host`
 
 The ephemeral GitHub Actions runner (`plans/ci-cd.md`) joins as
