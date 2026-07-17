@@ -105,6 +105,9 @@ jobs:
           TF_VAR_vps_tailscale_ip: ${{ secrets.VPS_TAILSCALE_IP }}
           TF_VAR_karakeep_nextauth_secret: ${{ secrets.KARAKEEP_NEXTAUTH_SECRET }}
           TF_VAR_meili_master_key: ${{ secrets.MEILI_MASTER_KEY }}
+          TF_VAR_trmnl_app_secret: ${{ secrets.TRMNL_APP_SECRET }}
+          TF_VAR_trmnl_database_password: ${{ secrets.TRMNL_DATABASE_PASSWORD }}
+          TF_VAR_trmnl_keyvalue_password: ${{ secrets.TRMNL_KEYVALUE_PASSWORD }}
         run: |
           terraform -chdir=terraform/portainer init
           terraform -chdir=terraform/portainer plan -no-color
