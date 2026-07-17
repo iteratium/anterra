@@ -59,9 +59,10 @@ history — the one volume worth backing up.
 
 ## Tailnet ACL
 
-The Kindle (`tag:kindle`) needs a grant to reach `tag:mediacenter:2300` — see
-`tag:kindle` in `setup/tailscale.md`. Not yet added to the live policy as of
-this doc; add via the admin console, then this doc is already current.
+No change needed: the live policy's catch-all `grants` entry already permits
+every tailnet member to reach every port on every other member, so
+`tag:kindle` can already reach `tag:mediacenter:2300` — see `tag:kindle` in
+`setup/tailscale.md`.
 
 ## Verification
 
