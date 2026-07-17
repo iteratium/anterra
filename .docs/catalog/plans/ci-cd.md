@@ -95,6 +95,20 @@ required checks. Stub workflows (`terraform-plan-stub.yml`,
 `ansible-check-stub.yml`) satisfy the required check on PRs that don't touch
 that path.
 
+## Portainer create-race recovery
+
+The `portainer` provider's create path races Portainer's async stack deploy
+and can 409 (`karakeep.md` has the root cause) — this taints the resource, and
+every subsequent apply destroys/recreates it into the same race. Recovery is
+`terraform untaint`, not re-apply.
+
+`terraform-untaint.yml` (`workflow_dispatch`, `resource` input) is a standing
+tool for this, not one-shot — first written for the karakeep stacks, kept
+around since the race can recur on any new `portainer_stack.*` resource (hit
+again by `trmnl`). Dispatch it with the tainted resource's address, e.g.
+`portainer_stack.trmnl`, after confirming the containers actually deployed
+healthy.
+
 ## Change process
 
 1. Branch off `main`, edit `terraform/`/`ansible/`, commit, push, open PR.
