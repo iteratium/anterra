@@ -10,23 +10,36 @@ TRMNL-maintained). Deployed as a Portainer stack (`trmnl`) from
 
 ## Layout
 
-| Containers | Host | Bind |
-|---|---|---|
-| trmnl (web), trmnl-worker, trmnl-database (Postgres), trmnl-keyvalue (Valkey), trmnl-init-certificates | mediacenter | `<mediacenter-100.x>:2300` (web only) |
+| Containers | Host | Bind | Exposure |
+|---|---|---|---|
+| trmnl (web), trmnl-worker, trmnl-database (Postgres), trmnl-keyvalue (Valkey), trmnl-init-certificates | mediacenter | `<mediacenter-100.x>:2300` (web only) | internal (rpi Caddy), `trmnl.ketwork.in` |
 
 Only the web container publishes a port, and only on mediacenter's tailnet
-IP — same reasoning as karakeep-backend (`karakeep.md`): the admin UI is
-unauthenticated on the tailnet. Postgres and Valkey are not published at all;
-web and worker reach them over the compose-internal network.
+IP — same reasoning as karakeep-backend (`karakeep.md`): the port itself
+stays off the LAN. Postgres and Valkey are not published at all; web and
+worker reach them over the compose-internal network.
 
 ## Addressing
 
-`API_URI` is `http://mediacenter:2300` — the bare MagicDNS name, matching the
-Kindle KOReader plugin's configured server URL (`kindle-tools`). The Kindle
-resolves this through its tailscaled SOCKS5/HTTP proxy, not a direct route.
+Two separate paths reach the same `web` container, same as arr's apps
+(`arr-stack.md`):
 
-No DNS record, no Caddy entry: this stack is deliberately tailnet-only, never
-proxied externally (unlike `keep.<domain>`).
+- **Device (Kindle) polling**: direct tailnet, `http://mediacenter:2300`
+  (bare MagicDNS name, unencrypted). `API_URI` is set to this exact string —
+  it must match what the KOReader plugin dials (`kindle-tools`), which
+  resolves it through the Kindle's tailscaled SOCKS5/HTTP proxy.
+- **Human admin access**: `https://trmnl.ketwork.in`, internal DNS record
+  (Cloudflare A -> `rpi_tailscale_ip`, not proxied) + rpi Caddy reverse-proxy
+  to `http://mediacenter.tailb3a7a.ts.net:2300` (`group_vars/caddy.yaml`),
+  same pattern as `radarr`/`sonarr`/etc. Only reachable from the tailnet or
+  LAN, since the A record content isn't a publicly routable address; TLS
+  comes from Caddy's Cloudflare DNS-01 ACME.
+
+**Unverified**: whether Terminus/Hanami rejects requests whose `Host` header
+(`trmnl.ketwork.in`) doesn't match `API_URI`'s host (`mediacenter`) — no
+allowed-hosts config was found in `config/app.rb`, so it's expected to work,
+but confirm by actually loading the admin UI through the new domain before
+relying on it.
 
 ## Versions
 
@@ -71,3 +84,6 @@ every tailnet member to reach every port on every other member, so
 2. `ssh root@kindle 'curl -sm8 --socks5-hostname 127.0.0.1:1055 http://mediacenter:2300/'`
    proves the ACL grant + proxy path end-to-end.
 3. Device shows up registered in the admin UI, battery/RSSI check-ins logging.
+4. `curl -sm8 https://trmnl.ketwork.in/` from a tailnet/LAN host returns the
+   app with a valid cert; confirms the Caddy reverse-proxy path and rules out
+   the Host-header risk noted above.
