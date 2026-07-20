@@ -37,9 +37,12 @@ local state between runs, and it pairs natively with `terraform`.
   LAN IPs — the runner's only path is the tailnet.
 - **Entrypoint**: `site.yml`, but per-play selection avoids re-running
   everything. A composite action (`.github/actions/ansible-select`) maps changed
-  paths (`dorny/paths-filter`) to the affected playbooks; a change to shared
-  files (`inventory/`, `requirements.yml`, `site.yml`) runs the full `site.yml`.
-  Check and apply share this action, so the path map lives in one place.
+  paths (`dorny/paths-filter`) to the affected playbooks. Inventory files map to
+  the playbooks that consume them (`group_vars/caddy.yaml` → `caddy.yml`,
+  `host_vars/mediacenter.yaml` → `jellyfin.yml`); only fleet-wide files
+  (`ansible.cfg`, `hosts.yaml`, `group_vars/all/`, `requirements.yml`,
+  `site.yml`) run the full `site.yml`. Check and apply share this action, so the
+  path map lives in one place.
 - **PR gate**: hard-fail on `--syntax-check` and an all-hosts `ping`; these are
   the blocking checks (`check` job).
 - **PR preview**: `ansible-playbook --check --diff`, stdout captured into a

@@ -7,12 +7,17 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: dorny/paths-filter@v3
+    - uses: dorny/paths-filter@v4
       id: filter
       with:
         filters: |
           shared:
-            - 'ansible/inventory/**'
+            - 'ansible.cfg'
+            - 'ansible/inventory/hosts.yaml'
+            - 'ansible/inventory/group_vars/all/**'
+            - 'ansible/inventory/host_vars/pve.yaml'
+            - 'ansible/inventory/host_vars/rpi.yaml'
+            - 'ansible/inventory/host_vars/vps.yaml'
             - 'ansible/requirements.yml'
             - 'ansible/site.yml'
           docker:
@@ -24,8 +29,10 @@ runs:
           caddy:
             - 'ansible/playbooks/caddy.yml'
             - 'ansible/playbooks/templates/**'
+            - 'ansible/inventory/group_vars/caddy.yaml'
           jellyfin:
             - 'ansible/playbooks/jellyfin.yml'
+            - 'ansible/inventory/host_vars/mediacenter.yaml'
           arr_storage:
             - 'ansible/playbooks/arr-storage.yml'
 
