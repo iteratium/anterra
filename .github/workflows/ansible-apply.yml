@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - ansible/**
+      - ansible.cfg
 
 concurrency:
   group: ansible-apply
@@ -20,7 +21,7 @@ jobs:
     environment: production
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - id: select
         uses: ./.github/actions/ansible-select

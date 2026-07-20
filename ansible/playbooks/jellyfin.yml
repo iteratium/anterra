@@ -122,15 +122,14 @@
       when: jellyfin_groups.changed
 
     - name: Check if UFW is installed
-      ansible.builtin.command: which ufw
-      register: ufw_check
-      changed_when: false
-      failed_when: false
+      ansible.builtin.stat:
+        path: /usr/sbin/ufw
+      register: ufw_binary
 
     - name: Allow Jellyfin through firewall
       community.general.ufw:
         rule: allow
         port: "8096"
         proto: tcp
-      when: ufw_check.rc == 0
+      when: ufw_binary.stat.exists
 ...

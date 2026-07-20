@@ -1,34 +1,35 @@
 # Deprecation Warnings — Remediation
 
-Warnings surfaced in the `ansible-apply` log. Ordered by effort/risk. Fold each
-into the next relevant change; status noted per item.
+Warnings surfaced in the `ansible-apply` log. Status noted per item.
 
-## 1. GitHub Actions: Node 20 EOL (quick, safe)
+## 1. GitHub Actions: Node 20 EOL
 
-`actions/checkout@v4` and `actions/setup-python@v5` target Node 20 (forced onto
-Node 24). The `punycode` / `trace-deprecation` lines are downstream of this.
+DONE. `actions/checkout` → `v7`, `actions/setup-python` → `v7`,
+`dorny/paths-filter` → `v4`, across all workflows and composite actions. All
+three target Node 24. The `punycode` / `trace-deprecation` lines were downstream
+of this.
 
-- Fix: bump to `actions/checkout@v5` and `actions/setup-python@v6` in all
-  workflows (terraform + ansible).
+## 2. Ansible: Python interpreter discovery
 
-## 2. Ansible: Python interpreter discovery (quick, safe)
+DONE. `interpreter_python = auto_silent` in `ansible.cfg [defaults]`.
 
-One warning per host (mediacenter 3.14, pve/rpi 3.13, vps 3.12) about
-auto-discovered interpreters.
+## 3. Ansible: apt_repository deprecated
 
-- Fix: `interpreter_python = auto_silent` in `ansible.cfg [defaults]`.
+DONE. `apt_repository` → `deb822_repository`; removed in ansible-core 2.25.
+Originated inside `geerlingguy.docker`, not our code. Role pinned to `8.0.0`,
+which uses `deb822_repository` and deletes the legacy
+`/etc/apt/sources.list.d/docker.list` it wrote previously.
 
-## 3. Ansible: apt_repository deprecated (track upstream)
+CI installs a pinned `ansible-core` (not the floating `ansible` bundle), so a
+core upgrade cannot silently break a role.
 
-`apt_repository` → `deb822_repository`; removed in ansible-core 2.25. Originates
-inside `geerlingguy.docker`, not our code.
+## 4. Ansible: INJECT_FACTS_AS_VARS default True
 
-- Fix (a): DONE — CI installs a pinned `ansible-core` (was `pip install
-  ansible`, unpinned), so an upgrade to 2.25 can't silently break the role.
-- Fix (b): track geerlingguy.docker for a deb822 migration, then unpin.
+Removed in ansible-core 2.24. `inject_facts_as_vars = False` is the fix. Every
+occurrence originated in `geerlingguy.docker` 7.4.1; `8.0.0` reads
+`ansible_facts.*` throughout, so the warning should clear without flipping the
+setting. Our own playbooks already use `ansible_facts[...]`.
 
-## 4. Ansible: INJECT_FACTS_AS_VARS default True (needs testing, defer)
-
-Removed in ansible-core 2.24. `inject_facts_as_vars = False` is the fix, but
-`geerlingguy.docker` reads top-level `ansible_*` fact vars, so flipping it may
-break the role. Needs a test apply. The ansible-core pin (#3a) buys time.
+Flip `inject_facts_as_vars = False` once a run confirms no remaining
+top-level-fact reads. Left at the default until then — flipping it blind breaks
+any dependency that still reads bare `ansible_*`.
