@@ -107,10 +107,10 @@ every subsequent apply destroys/recreates it into the same race. Recovery is
 
 `terraform-untaint.yml` (`workflow_dispatch`, `resource` input) is a standing
 tool for this, not one-shot — first written for the karakeep stacks, kept
-around since the race can recur on any new `portainer_stack.*` resource (hit
-again by `trmnl`). Dispatch it with the tainted resource's address, e.g.
-`portainer_stack.trmnl`, after confirming the containers actually deployed
-healthy.
+around since the race can recur on any new `portainer_stack.*` resource.
+Dispatch it with the tainted resource's address, e.g.
+`portainer_stack.karakeep_web`, after confirming the containers actually
+deployed healthy.
 
 ## Change process
 

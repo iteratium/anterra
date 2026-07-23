@@ -9,7 +9,6 @@ locals {
     "prowlarr",
     "profilarr",
     "flaresolverr",
-    "trmnl",
   ])
 
   external_services = {

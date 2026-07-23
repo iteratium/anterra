@@ -123,6 +123,3 @@ All secrets stored exclusively on Github Secrets
 | `VPS_TAILSCALE_IP` | vps Tailscale IP — karakeep-web bind address |
 | `KARAKEEP_NEXTAUTH_SECRET` | Karakeep `NEXTAUTH_SECRET` — session JWT signing |
 | `MEILI_MASTER_KEY` | Meilisearch master key — shared by the karakeep-backend and karakeep-web stacks |
-| `TRMNL_APP_SECRET` | Terminus (TRMNL BYOS) `APP_SECRET` — signs application session cookies |
-| `TRMNL_DATABASE_PASSWORD` | Terminus internal Postgres password |
-| `TRMNL_KEYVALUE_PASSWORD` | Terminus internal Valkey password |
