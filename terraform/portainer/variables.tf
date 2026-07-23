@@ -22,6 +22,12 @@ variable "vps_endpoint_id" {
   default     = 4
 }
 
+variable "rpi_endpoint_id" {
+  type        = number
+  description = "Portainer endpoint id for the rpi environment"
+  default     = 3
+}
+
 variable "mediacenter_tailscale_ip" {
   type        = string
   description = "mediacenter Tailscale IP, bind address for the karakeep backend and the address karakeep-web dials"

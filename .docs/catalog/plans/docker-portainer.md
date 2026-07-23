@@ -12,9 +12,9 @@ Container runtime and management for the workload hosts. Deployed by
 | vps | yes | agent | 4 |
 | pve | no (hypervisor) | no | — |
 
-Endpoint ids are needed for any future `portainer_stack` Terraform resource
-targeting rpi or vps (mirroring `mediacenter_endpoint_id` in
-`terraform/portainer/variables.tf`) — not currently wired up as tfvars, see
+Endpoint ids are needed for any `portainer_stack` Terraform resource
+targeting a host (`mediacenter_endpoint_id`, `rpi_endpoint_id`,
+`vps_endpoint_id` in `terraform/portainer/variables.tf`); see
 `watchtower.md` for why Watchtower went via Ansible instead.
 
 Inventory groups (`ansible/inventory/hosts.yaml`): `docker_hosts` (all three),
