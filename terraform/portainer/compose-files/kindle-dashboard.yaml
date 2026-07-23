@@ -1,0 +1,14 @@
+services:
+  kindle-dashboard:
+    image: ghcr.io/iteratium/kindle-dashboard:latest
+    container_name: kindle-dashboard
+    ports:
+      - "8080:3000"
+    volumes:
+      - data:/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    restart: always
+
+volumes:
+  data:

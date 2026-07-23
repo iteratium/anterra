@@ -21,6 +21,8 @@ internal_reverse_proxy_records:
     upstream: "http://mediacenter.tailb3a7a.ts.net:6868"
   - domain: flaresolverr.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8191"
+  - domain: kdash.{{ domain_name }}
+    upstream: "http://rpi.tailb3a7a.ts.net:8080"
 
 external_reverse_proxy_records:
   - domain: jellyfin.{{ domain_name }}

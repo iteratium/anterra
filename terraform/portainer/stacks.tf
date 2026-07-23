@@ -34,6 +34,15 @@ resource "portainer_stack" "karakeep_backend" {
   })
 }
 
+resource "portainer_stack" "kindle_dashboard" {
+  name            = "kindle-dashboard"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.rpi_endpoint_id
+
+  stack_file_content = file("${path.module}/compose-files/kindle-dashboard.yaml")
+}
+
 resource "portainer_stack" "karakeep_web" {
   name            = "karakeep-web"
   deployment_type = "standalone"
