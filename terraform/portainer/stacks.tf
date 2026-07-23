@@ -48,18 +48,3 @@ resource "portainer_stack" "karakeep_web" {
     meili_master_key         = var.meili_master_key
   })
 }
-
-resource "portainer_stack" "trmnl" {
-  name            = "trmnl"
-  deployment_type = "standalone"
-  method          = "string"
-  endpoint_id     = var.mediacenter_endpoint_id
-
-  stack_file_content = templatefile("${path.module}/compose-files/trmnl.yaml.tpl", {
-    mediacenter_tailscale_ip = var.mediacenter_tailscale_ip
-    trmnl_port               = var.trmnl_port
-    trmnl_app_secret         = var.trmnl_app_secret
-    trmnl_database_password  = var.trmnl_database_password
-    trmnl_keyvalue_password  = var.trmnl_keyvalue_password
-  })
-}

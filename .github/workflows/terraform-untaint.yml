@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       resource:
-        description: "Resource address to untaint (e.g. portainer_stack.trmnl)"
+        description: "Resource address to untaint (e.g. portainer_stack.karakeep_web)"
         required: true
         type: string
 

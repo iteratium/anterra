@@ -123,27 +123,3 @@ variable "airvpn_forwarded_port" {
   description = "AirVPN forwarded port for qbittorrent inbound connections"
   sensitive   = true
 }
-
-variable "trmnl_port" {
-  type        = number
-  description = "TRMNL BYOS (Terminus) bind port on mediacenter's tailnet IP; also the Kindle plugin's server port"
-  default     = 2300
-}
-
-variable "trmnl_app_secret" {
-  type        = string
-  description = "Terminus APP_SECRET, signs application session cookies"
-  sensitive   = true
-}
-
-variable "trmnl_database_password" {
-  type        = string
-  description = "Terminus internal Postgres password"
-  sensitive   = true
-}
-
-variable "trmnl_keyvalue_password" {
-  type        = string
-  description = "Terminus internal Valkey password"
-  sensitive   = true
-}

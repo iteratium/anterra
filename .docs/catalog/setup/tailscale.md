@@ -82,14 +82,6 @@ This repo's copy trailed the live policy until now — recorded here per the
 usual "reference only, hand-synced" caveat (see the note under **SSH access
 policy** at the top of this doc).
 
-**No separate grant needed** for the Kindle to reach the TRMNL BYOS on
-`mediacenter` (`trmnl.md`): the live policy's `grants` block already has a
-catch-all `{"src": ["*"], "dst": ["*"], "ip": ["*"]}` entry, so every tailnet
-member (tagged or not) can already reach every port on every other member.
-The narrower `tag:kindle` -> `tag:mediacenter:2300` grant considered in
-`kindle-tools/plans/anterra-plan.md` would be redundant given that catch-all
-— confirmed live, 2026-07-17.
-
 ## `tag:ci-runner` and `tag:fleet-host`
 
 The ephemeral GitHub Actions runner (`plans/ci-cd.md`) joins as
