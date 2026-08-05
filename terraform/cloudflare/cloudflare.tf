@@ -16,6 +16,7 @@ locals {
     jellyfin = { proxied = false }
     keep     = { proxied = true }
     seerr    = { proxied = true }
+    papra    = { proxied = true }
   }
 }
 

@@ -123,3 +123,7 @@ All secrets stored exclusively on Github Secrets
 | `VPS_TAILSCALE_IP` | vps Tailscale IP — karakeep-web bind address |
 | `KARAKEEP_NEXTAUTH_SECRET` | Karakeep `NEXTAUTH_SECRET` — session JWT signing |
 | `MEILI_MASTER_KEY` | Meilisearch master key — shared by the karakeep-backend and karakeep-web stacks |
+| `PAPRA_AUTH_SECRET` | Papra `AUTH_SECRET` — session/JWT signing |
+| `PAPRA_OIDC_CLIENT_ID` | Cloudflare Access SaaS app client ID — Papra OIDC login |
+| `PAPRA_OIDC_CLIENT_SECRET` | Cloudflare Access SaaS app client secret — Papra OIDC login |
+| `PAPRA_OIDC_DISCOVERY_URL` | Cloudflare Access SaaS app configuration endpoint (OIDC discovery URL) — Papra OIDC login |
