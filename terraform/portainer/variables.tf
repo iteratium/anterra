@@ -67,7 +67,7 @@ variable "papra_version" {
 variable "papra_registration_enabled" {
   type        = string
   description = "Papra AUTH_IS_REGISTRATION_ENABLED; true only for the one-time bootstrap apply, then flipped back to false"
-  default     = "true"
+  default     = "false"
 }
 
 variable "papra_auth_secret" {
