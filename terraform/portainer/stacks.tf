@@ -43,6 +43,35 @@ resource "portainer_stack" "kindle_dashboard" {
   stack_file_content = file("${path.module}/compose-files/kindle-dashboard.yaml")
 }
 
+resource "portainer_stack" "papra" {
+  name            = "papra"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.mediacenter_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/papra.yaml.tpl", {
+    papra_version              = var.papra_version
+    domain_name                = var.domain_name
+    docker_timezone            = var.docker_timezone
+    docker_user_puid           = var.docker_user_puid
+    docker_user_pgid           = var.docker_user_pgid
+    docker_config_path         = var.config_path
+    mediacenter_tailscale_ip   = var.mediacenter_tailscale_ip
+    papra_auth_secret          = var.papra_auth_secret
+    papra_registration_enabled = var.papra_registration_enabled
+    papra_oidc_providers_json = jsonencode([{
+      providerId   = "cloudflare"
+      providerName = "Cloudflare Access"
+      type         = "oidc"
+      clientId     = var.papra_oidc_client_id
+      clientSecret = var.papra_oidc_client_secret
+      discoveryUrl = var.papra_oidc_discovery_url
+      scopes       = ["openid", "email", "profile"]
+      pkce         = true
+    }])
+  })
+}
+
 resource "portainer_stack" "karakeep_web" {
   name            = "karakeep-web"
   deployment_type = "standalone"

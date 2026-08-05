@@ -58,6 +58,42 @@ variable "meili_version" {
   default     = "v1.41.0"
 }
 
+variable "papra_version" {
+  type        = string
+  description = "Papra image tag, pinned"
+  default     = "26.6.1-rootless"
+}
+
+variable "papra_registration_enabled" {
+  type        = string
+  description = "Papra AUTH_IS_REGISTRATION_ENABLED; true only for the one-time bootstrap apply, then flipped back to false"
+  default     = "false"
+}
+
+variable "papra_auth_secret" {
+  type        = string
+  description = "Papra AUTH_SECRET, signs sessions/JWTs"
+  sensitive   = true
+}
+
+variable "papra_oidc_client_id" {
+  type        = string
+  description = "Cloudflare Access SaaS app client ID for Papra OIDC login"
+  sensitive   = true
+}
+
+variable "papra_oidc_client_secret" {
+  type        = string
+  description = "Cloudflare Access SaaS app client secret for Papra OIDC login"
+  sensitive   = true
+}
+
+variable "papra_oidc_discovery_url" {
+  type        = string
+  description = "Cloudflare Access SaaS app configuration endpoint (OIDC discovery URL) for Papra login"
+  sensitive   = true
+}
+
 variable "docker_timezone" {
   type        = string
   description = "TZ for the arr containers"
