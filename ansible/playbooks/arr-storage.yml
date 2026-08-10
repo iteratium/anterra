@@ -18,8 +18,6 @@
       - flaresolverr
       - seerr
       - gluetun
-      - papra/db
-      - papra/documents
     owned_trees:
       - /mnt/fast-store/app-data
       - /mnt/fast-store/downloads

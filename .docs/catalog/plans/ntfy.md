@@ -5,7 +5,7 @@ Push notification server. Deployed as a Portainer stack on vps from
 
 ## Status
 
-Written but not merged. Changes sit uncommitted on branch `ntfy-deploy`:
+Deployed. Merged via #40, applied to vps, and bootstrapped:
 
 | File | Change |
 |---|---|
@@ -15,17 +15,24 @@ Written but not merged. Changes sit uncommitted on branch `ntfy-deploy`:
 | `terraform/cloudflare/cloudflare.tf` | `ntfy = { proxied = true }` |
 | `ansible/inventory/group_vars/caddy.yaml` | external record -> `vps:9722` |
 
-No new GitHub Secrets and no workflow changes — the stack only needs
-`domain_name`, `vps_tailscale_ip` and `docker_timezone`, all already passed to
-the portainer apply step.
+No new GitHub Secrets were needed for the stack itself. The first `terraform
+apply` after merge hit a transient Portainer 409 ("deployment already in
+progress") on stack creation, which left `portainer_stack.ntfy` needing
+`terraform untaint` (run via the `terraform-untaint.yml` workflow) before a
+clean re-apply; the stack itself came up fine on the Portainer side.
 
-Verified locally: compose renders to valid YAML, caddy group_vars parses, port
-9722 is free on vps. Terraform fmt/validate and the ansible check run in CI;
-neither binary is installed on the workstation.
+Bootstrap (below) is complete: admin and `publisher` users created, and the
+`publisher` token is stored as the `NTFY_PUBLISH_TOKEN` GitHub Secret. Phone
+app logged in as admin and confirmed notifications deliver correctly through
+the Cloudflare proxy.
 
-Remaining: commit, PR, apply, then the bootstrap and verification below.
-Terraform and ansible can share one PR here — neither side depends on state the
-other creates, so the worst case is Caddy serving 502 until the stack lands.
+`NTFY_PUBLISH_TOKEN` is consumed by Seerr's built-in ntfy notification agent
+(server URL + token + notification types set in the Seerr UI directly, no
+generic webhook needed) — confirmed working with a test notification for
+media-available alerts.
+
+Remaining: none. Future publishers (mediacenter/pve/rpi scripts) can reuse the
+same token.
 
 ## Layout
 
