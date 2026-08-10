@@ -42,6 +42,9 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           BASE_DOMAIN: ${{ secrets.BASE_DOMAIN }}
           UNIFI_CONSOLE_IP: ${{ secrets.UNIFI_CONSOLE_IP }}
+          FILEBROWSER_OIDC_CLIENT_ID: ${{ secrets.FILEBROWSER_OIDC_CLIENT_ID }}
+          FILEBROWSER_OIDC_CLIENT_SECRET: ${{ secrets.FILEBROWSER_OIDC_CLIENT_SECRET }}
+          FILEBROWSER_OIDC_ISSUER_URL: ${{ secrets.FILEBROWSER_OIDC_ISSUER_URL }}
         run: |
           set -o pipefail
           ansible-playbook -i ansible/inventory/hosts.yaml ${{ steps.select.outputs.list }} \
