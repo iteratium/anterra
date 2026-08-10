@@ -74,6 +74,21 @@ resource "portainer_stack" "filebrowser" {
   })
 }
 
+resource "portainer_stack" "rclone" {
+  name            = "rclone"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.mediacenter_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/rclone.yaml.tpl", {
+    rclone_version     = var.rclone_version
+    docker_timezone    = var.docker_timezone
+    docker_user_puid   = var.docker_user_puid
+    docker_user_pgid   = var.docker_user_pgid
+    docker_config_path = var.config_path
+  })
+}
+
 resource "portainer_stack" "ntfy" {
   name            = "ntfy"
   deployment_type = "standalone"
