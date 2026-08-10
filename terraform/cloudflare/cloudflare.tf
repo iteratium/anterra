@@ -17,6 +17,7 @@ locals {
     keep     = { proxied = true }
     seerr    = { proxied = true }
     ntfy     = { proxied = true }
+    files    = { proxied = true }
   }
 }
 

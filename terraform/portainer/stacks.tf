@@ -58,6 +58,22 @@ resource "portainer_stack" "karakeep_web" {
   })
 }
 
+resource "portainer_stack" "filebrowser" {
+  name            = "filebrowser"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.mediacenter_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/filebrowser.yaml.tpl", {
+    filebrowser_version      = var.filebrowser_version
+    docker_timezone          = var.docker_timezone
+    docker_user_puid         = var.docker_user_puid
+    docker_user_pgid         = var.docker_user_pgid
+    docker_config_path       = var.config_path
+    mediacenter_tailscale_ip = var.mediacenter_tailscale_ip
+  })
+}
+
 resource "portainer_stack" "ntfy" {
   name            = "ntfy"
   deployment_type = "standalone"
