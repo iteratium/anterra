@@ -58,6 +58,12 @@ variable "meili_version" {
   default     = "v1.41.0"
 }
 
+variable "filebrowser_version" {
+  type        = string
+  description = "FileBrowser Quantum image tag; minor-floating on the v2 beta channel so Watchtower applies 2.0.x fixes, while a 2.1/3.x move stays a deliberate PR"
+  default     = "2.0-beta"
+}
+
 variable "ntfy_version" {
   type        = string
   description = "ntfy image tag, pinned so auth/cache DB migrations happen on a deliberate bump"
