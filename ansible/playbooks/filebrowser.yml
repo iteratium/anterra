@@ -5,6 +5,7 @@
   gather_facts: false
   vars:
     filebrowser_base: /mnt/fast-store/app-data/filebrowser
+    rclone_base: /mnt/fast-store/app-data/rclone
   tasks:
     - name: Create FileBrowser data directory
       ansible.builtin.file:
@@ -30,4 +31,12 @@
         group: media
         mode: "0600"
       no_log: true
+
+    - name: Create rclone config directory
+      ansible.builtin.file:
+        path: "{{ rclone_base }}"
+        state: directory
+        owner: docker
+        group: media
+        mode: "0700"
 ...
