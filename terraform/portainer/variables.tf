@@ -70,6 +70,12 @@ variable "ntfy_version" {
   default     = "v2.27.0"
 }
 
+variable "rclone_version" {
+  type        = string
+  description = "rclone image tag, minor-floating so Watchtower applies 1.75.x fixes"
+  default     = "1.75"
+}
+
 variable "cloudflare_edge_ranges" {
   type        = list(string)
   description = "Cloudflare edge IP ranges, stripped from X-Forwarded-For so ntfy sees the real client IP. Source: cloudflare.com/ips-v4 and ips-v6"
