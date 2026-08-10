@@ -31,8 +31,6 @@ external_reverse_proxy_records:
     upstream: "http://vps.tailb3a7a.ts.net:9721"
   - domain: seerr.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:5055"
-  - domain: papra.{{ domain_name }}
-    upstream: "http://mediacenter.tailb3a7a.ts.net:1221"
   - domain: ntfy.{{ domain_name }}
     upstream: "http://vps.tailb3a7a.ts.net:9722"
 ...
