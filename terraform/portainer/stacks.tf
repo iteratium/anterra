@@ -86,3 +86,18 @@ resource "portainer_stack" "karakeep_web" {
     meili_master_key         = var.meili_master_key
   })
 }
+
+resource "portainer_stack" "ntfy" {
+  name            = "ntfy"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.vps_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/ntfy.yaml.tpl", {
+    ntfy_version           = var.ntfy_version
+    domain_name            = var.domain_name
+    docker_timezone        = var.docker_timezone
+    vps_tailscale_ip       = var.vps_tailscale_ip
+    cloudflare_edge_ranges = join(",", var.cloudflare_edge_ranges)
+  })
+}
