@@ -35,6 +35,9 @@ runs:
             - 'ansible/inventory/host_vars/mediacenter.yaml'
           arr_storage:
             - 'ansible/playbooks/arr-storage.yml'
+          filebrowser:
+            - 'ansible/playbooks/filebrowser.yml'
+            - 'ansible/playbooks/templates/**'
 
     - id: build
       shell: bash
@@ -49,5 +52,6 @@ runs:
           [ "${{ steps.filter.outputs.caddy }}" = "true" ] && LIST="$LIST ansible/playbooks/caddy.yml"
           [ "${{ steps.filter.outputs.jellyfin }}" = "true" ] && LIST="$LIST ansible/playbooks/jellyfin.yml"
           [ "${{ steps.filter.outputs.arr_storage }}" = "true" ] && LIST="$LIST ansible/playbooks/arr-storage.yml"
+          [ "${{ steps.filter.outputs.filebrowser }}" = "true" ] && LIST="$LIST ansible/playbooks/filebrowser.yml"
           echo "list=${LIST# }" >> "$GITHUB_OUTPUT"
         fi

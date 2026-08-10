@@ -1,0 +1,46 @@
+http:
+  port: 80
+  baseURL: "/"
+  trustProxyHeaders: true
+  externalUrl: "https://files.{{ domain_name }}"
+
+server:
+  cacheDir: /home/filebrowser/data/tmp
+  database:
+    path: /home/filebrowser/data/database.sqlite
+  sources:
+    - path: /files
+      name: files
+      config:
+        defaultEnabled: true
+        defaultPermissions:
+          view: true
+          download: true
+          modify: true
+          create: true
+          delete: true
+
+auth:
+  methods:
+    password:
+      enabled: false
+    oidc:
+      enabled: true
+      clientId: "{{ lookup('env', 'FILEBROWSER_OIDC_CLIENT_ID') }}"
+      clientSecret: "{{ lookup('env', 'FILEBROWSER_OIDC_CLIENT_SECRET') }}"
+      issuerUrl: "{{ lookup('env', 'FILEBROWSER_OIDC_ISSUER_URL') }}"
+      scopes: "openid email profile"
+      userIdentifier: "email"
+
+frontend:
+  name: "Files"
+
+userDefaults:
+  account:
+    permissions:
+      admin: false
+      share: true
+      api: true
+  fileLoading:
+    uploadChunkSizeMb: 10
+    downloadChunkSizeMb: 50

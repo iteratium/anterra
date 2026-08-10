@@ -1,0 +1,33 @@
+---
+- name: Provision FileBrowser storage and config
+  hosts: mediacenter
+  become: true
+  gather_facts: false
+  vars:
+    filebrowser_base: /mnt/fast-store/app-data/filebrowser
+  tasks:
+    - name: Create FileBrowser data directory
+      ansible.builtin.file:
+        path: "{{ filebrowser_base }}/data"
+        state: directory
+        owner: docker
+        group: media
+        mode: "0700"
+
+    - name: Create FileBrowser served files directory
+      ansible.builtin.file:
+        path: "{{ filebrowser_base }}/files"
+        state: directory
+        owner: docker
+        group: media
+        mode: "2775"
+
+    - name: Render FileBrowser config
+      ansible.builtin.template:
+        src: templates/filebrowser-config.yaml.j2
+        dest: "{{ filebrowser_base }}/data/config.yaml"
+        owner: docker
+        group: media
+        mode: "0600"
+      no_log: true
+...
