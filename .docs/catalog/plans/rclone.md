@@ -14,8 +14,11 @@ first container start. See
 [[anterra-terraform-ansible-pr-race]] in memory for the general pattern.
 
 One-time authorisation (`rclone config`, headless OAuth via `rclone
-authorize` run locally) is a manual step after both PRs are merged and
-applied — not yet done as of this writing.
+authorize` run locally) is done for both `gdrive` and `onedrive`, using
+dedicated OAuth clients rather than rclone's shared defaults — see "OAuth
+clients" below for why. Verified: clean hourly syncs, `drive.file` scope
+proof, read-only mount proof, rename-as-server-side-move proof, and
+delete-into-`.trash` proof, all passing on both remotes.
 
 ## Layout
 
@@ -92,10 +95,15 @@ visible, redo the `gdrive` remote's `rclone config`.
 
 Microsoft has no `drive.file` analogue. The OneDrive backend requests
 `Files.ReadWrite.All`, which grants access to the whole OneDrive. The token
-never leaving mediacenter is the only mitigation short of registering a
-dedicated Azure app with `Files.ReadWrite` (non-`.All`) — not done, since
-throttling on the shared client hasn't appeared. Pre-creating `files/` on
-OneDrive is harmless, unlike on Drive, since no scope restriction applies.
+never leaving mediacenter is the main mitigation. A dedicated Azure app (see
+"OAuth clients" below) narrows the blast radius of a leaked token to just
+this app's grant, but rclone's own documented permission set for the OneDrive
+backend is `Files.Read`, `Files.ReadWrite`, `Files.Read.All`,
+`Files.ReadWrite.All`, `offline_access`, `User.Read`, `Sites.Read.All`
+together — there's no documented working path using only the non-`.All`
+scopes, so this app requests the full set rather than guessing at a narrower
+one. Pre-creating `files/` on OneDrive is harmless, unlike on Drive, since no
+scope restriction applies.
 
 ## Why a container rather than a host install
 
@@ -113,31 +121,63 @@ it itself. Combined with not wanting to leak Drive/OneDrive access, rclone
 tokens are never committed, never pass through chat, and never become GitHub
 Secrets.
 
-## Reauthorisation
+## OAuth clients
 
-Both providers' tokens can expire or be revoked:
+Both remotes use **dedicated** OAuth clients, not rclone's shared defaults.
+This wasn't the original plan — the original decision was to use the shared
+clients and only register dedicated ones if throttling appeared. That changed
+mid-setup: `rclone config` for `gdrive` warned that rclone's shared Google
+Drive client is being retired during 2026, not merely throttled. Since a
+dedicated client was needed for Google regardless, one was registered for
+OneDrive too rather than wait to hit the same class of problem separately.
 
-- **OneDrive** refresh tokens die after 90 days of inactivity. Recover with
-  `docker exec -it rclone rclone config reconnect onedrive:` (same headless
-  flow as initial setup).
-- **Google Drive** refresh tokens have no fixed lifetime, but Google revokes
-  after 6 months without a successful refresh, or if the app's client
-  exceeds 50 issued tokens. Hourly syncing means inactivity alone shouldn't
-  trigger it. Recover with `docker exec -it rclone rclone config reconnect
-  gdrive:`.
-- **Shared client rate-limiting** on either provider is congestion from other
-  rclone users on the same default app, not our own volume. Safe to defer
-  fixing, since `sync` re-diffs from scratch every run — a throttled run just
-  leaves files for the next hourly pass, nothing is lost. If it becomes
-  persistent: reuse the existing Google Cloud project (the one behind the
-  Zero Trust Google identity provider) for a second Drive OAuth client
-  (`drive.file` scope, Desktop app type); for OneDrive there is no existing
-  project to reuse, so a new Azure/Entra app would be needed.
+- **Google**: a second OAuth 2.0 Client in the same Google Cloud project that
+  backs Cloudflare Zero Trust's Google identity provider (that pre-existing
+  client is named `Global-Auth-Client` in the console, kept separate from
+  this one). Type **Desktop app**, scope `drive.file` only. Publishing status
+  is **In production** — Testing mode expires refresh tokens after 7 days.
+- **OneDrive**: a new Azure/Entra app, since there was no existing project to
+  reuse. Account type "Accounts in any organizational directory (multitenant)
+  and personal Microsoft accounts", redirect URI `http://localhost:53682/`
+  (Web platform), delegated permissions as listed above.
+  **`disable_site_permission = true`** is set in the remote's advanced
+  config — without it, authorising against a personal (non-work/school)
+  Microsoft account failed with a generic `Auth Error: No code returned by
+  remote server: server_error`, even though the Microsoft Authenticator
+  approval succeeded. Root cause: `Sites.Read.All` is a SharePoint-oriented
+  permission that personal accounts don't cleanly consent to, and the
+  failure surfaces as an opaque server error rather than a scope-specific
+  one. (The other common cause of that same error is copying the secret's
+  "Secret ID" instead of its "Value" from the Azure portal — check that
+  first if it recurs.)
 
 The initial `rclone config` walkthrough (headless `rclone authorize`, run
 locally) needs rclone installed locally — apt's 1.60.1 predates Google's
 removal of the OAuth out-of-band flow that `rclone authorize` depends on, so
 it was installed from the official `install.sh` instead.
+
+## Credential renewal timeline
+
+- **Google OAuth client secret**: does not expire. Google has no automatic
+  expiration for Cloud Console OAuth client secrets — rotation is manual only
+  (Google Auth Platform → Clients; max two live secrets at once, so rotating
+  means adding a new one, migrating, then disabling the old one). No renewal
+  deadline to track.
+- **Google refresh token**: no fixed lifetime, but revoked after 6 months
+  without a successful refresh, or if the client exceeds 50 issued tokens.
+  Hourly syncing means inactivity alone shouldn't trigger this. Recover with
+  `docker exec -it rclone rclone config reconnect gdrive:`.
+- **Azure/Entra client secret**: **expires 2028-08-10** (24 months from
+  creation on 2026-08-10). This is a hard deadline — unlike Google's secret,
+  Azure client secrets always have a fixed expiry. Before then: Azure Portal
+  → App registrations → the rclone app → Certificates & secrets → new client
+  secret → copy the Value → update the `onedrive` remote (`docker exec -it
+  rclone rclone config update onedrive client_secret <new-value>`, or redo
+  `rclone config` for `onedrive`) → `docker restart rclone`. Missing this
+  deadline breaks the OneDrive sync until redone.
+- **OneDrive refresh token**: dies after 90 days of inactivity, independent
+  of the client secret's own expiry. Recover with `docker exec -it rclone
+  rclone config reconnect onedrive:` (same headless flow as initial setup).
 
 ## Out of scope: the SQLite DB
 
