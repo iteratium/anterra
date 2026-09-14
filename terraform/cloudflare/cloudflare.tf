@@ -10,14 +10,14 @@ locals {
     "profilarr",
     "flaresolverr",
     "kdash",
+    "jellyfin",
+    "seerr",
+    "files",
   ])
 
   external_services = {
-    jellyfin = { proxied = false }
-    keep     = { proxied = true }
-    seerr    = { proxied = true }
-    ntfy     = { proxied = true }
-    files    = { proxied = true }
+    keep = { proxied = true }
+    ntfy = { proxied = true }
   }
 }
 
