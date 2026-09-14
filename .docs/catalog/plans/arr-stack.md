@@ -15,7 +15,7 @@ WireGuard) network namespace; if the VPN drops, every app loses network.
 | profilarr | 6868 | `profilarr` | internal |
 | profilarr-parser | 5000 (internal only) | — | not exposed |
 | flaresolverr | 8191 | `flaresolverr` | internal |
-| seerr | 5055 | `seerr` | external (vps Caddy) |
+| seerr | 5055 | `seerr` | internal |
 
 Ports are published on the gluetun container (mediacenter host). Caddy reaches them
 over the tailnet at `mediacenter.<tailnet>:<port>`; gluetun's
