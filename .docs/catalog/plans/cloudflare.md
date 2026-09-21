@@ -19,6 +19,9 @@ Terraform creates them fresh.
 
 - **Internal services -> rpi Tailscale IP**, `proxied = false`. Reachable only on
   the tailnet; Cloudflare provides DNS + TLS (DNS-01), not proxying.
+- **LAN services -> laptop LAN IP**, `proxied = false`. Reachable only from the
+  home LAN. Served by a Caddy on the laptop (guacamole repo), not by Ansible here,
+  so there is no `caddy.yaml` entry.
 - **External services -> vps public IP**, `proxied = true` by default. Publicly
   reachable through the Cloudflare edge. Per-service `{ proxied = false }` opts a
   record into DNS-only (required for media/streaming per Cloudflare ToS, e.g.
@@ -43,5 +46,6 @@ the locals as services are added.
 - `BASE_DOMAIN` — base domain for record names (shared with Ansible).
 - `RPI_TAILSCALE_IP` — internal A-record target.
 - `VPS_PUBLIC_IP` — external A-record target.
+- `LAPTOP_LAN_IP` — LAN-only A-record target (`rdp`).
 
 Wired as `TF_VAR_*` in `terraform-apply.yml` and `terraform-plan.yml`.
