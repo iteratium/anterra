@@ -22,6 +22,12 @@ variable "rpi_tailscale_ip" {
   sensitive   = true
 }
 
+variable "laptop_lan_ip" {
+  type        = string
+  description = "Laptop LAN IP, A-record target for LAN-only services"
+  sensitive   = true
+}
+
 variable "vps_public_ip" {
   type        = string
   description = "vps public IP, A-record target for external services"

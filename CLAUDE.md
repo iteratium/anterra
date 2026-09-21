@@ -113,6 +113,7 @@ All secrets stored exclusively on Github Secrets
 | `BASE_DOMAIN` | Base domain — Ansible Caddy records and Terraform DNS record names |
 | `RPI_TAILSCALE_IP` | rpi Tailscale IP — Terraform A-record target for internal services |
 | `VPS_PUBLIC_IP` | vps public IP — Terraform A-record target for external services |
+| `LAPTOP_LAN_IP` | Laptop LAN IP — Terraform A-record target for LAN-only services (`rdp`) |
 | `UNIFI_CONSOLE_IP` | Unifi console LAN IP — Caddy upstream for the `ui` record (Ansible) |
 | `PORTAINER_API_KEY` | Portainer API access token — `portainer` provider auth (Terraform portainer workspace) |
 | `WIREGUARD_PRIVATE_KEY` | AirVPN WireGuard private key — gluetun (arr stack) |

@@ -15,6 +15,10 @@ locals {
     "files",
   ])
 
+  lan_services = toset([
+    "rdp",
+  ])
+
   external_services = {
     keep = { proxied = true }
     ntfy = { proxied = true }
@@ -27,6 +31,18 @@ resource "cloudflare_dns_record" "internal" {
   zone_id = var.cloudflare_zone_id
   name    = "${each.value}.${var.domain_name}"
   content = var.rpi_tailscale_ip
+  type    = "A"
+  proxied = false
+  ttl     = 1
+  comment = "Managed by Terraform"
+}
+
+resource "cloudflare_dns_record" "lan" {
+  for_each = local.lan_services
+
+  zone_id = var.cloudflare_zone_id
+  name    = "${each.value}.${var.domain_name}"
+  content = var.laptop_lan_ip
   type    = "A"
   proxied = false
   ttl     = 1
