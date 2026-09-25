@@ -10,9 +10,12 @@ locals {
     "profilarr",
     "flaresolverr",
     "kdash",
-    "jellyfin",
     "seerr",
     "files",
+  ])
+
+  vps_tailnet_services = toset([
+    "jellyfin",
   ])
 
   lan_services = toset([
@@ -31,6 +34,18 @@ resource "cloudflare_dns_record" "internal" {
   zone_id = var.cloudflare_zone_id
   name    = "${each.value}.${var.domain_name}"
   content = var.rpi_tailscale_ip
+  type    = "A"
+  proxied = false
+  ttl     = 1
+  comment = "Managed by Terraform"
+}
+
+resource "cloudflare_dns_record" "vps_tailnet" {
+  for_each = local.vps_tailnet_services
+
+  zone_id = var.cloudflare_zone_id
+  name    = "${each.value}.${var.domain_name}"
+  content = var.vps_tailscale_ip
   type    = "A"
   proxied = false
   ttl     = 1

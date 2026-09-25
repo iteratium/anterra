@@ -23,14 +23,15 @@ internal_reverse_proxy_records:
     upstream: "http://mediacenter.tailb3a7a.ts.net:8191"
   - domain: kdash.{{ domain_name }}
     upstream: "http://rpi.tailb3a7a.ts.net:8080"
-  - domain: jellyfin.{{ domain_name }}
-    upstream: "http://mediacenter.tailb3a7a.ts.net:8096"
   - domain: seerr.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:5055"
   - domain: files.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8334"
 
 external_reverse_proxy_records:
+  - domain: jellyfin.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8096"
+    tailnet_only: true
   - domain: keep.{{ domain_name }}
     upstream: "http://vps.tailb3a7a.ts.net:9721"
   - domain: ntfy.{{ domain_name }}
