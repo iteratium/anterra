@@ -7,6 +7,10 @@
 {% endif %}
 {% for record in records %}
 {{ record.domain }} {
+{% if record.tailnet_only | default(false) %}
+	@public not remote_ip 100.64.0.0/10 fd7a:115c:a1e0::/48
+	abort @public
+{% endif %}
 {% if record.tls_skip_verify | default(false) %}
 	reverse_proxy {{ record.upstream }} {
 		transport http {
