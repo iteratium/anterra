@@ -103,3 +103,26 @@ resource "portainer_stack" "ntfy" {
     cloudflare_edge_ranges = join(",", var.cloudflare_edge_ranges)
   })
 }
+
+resource "portainer_stack" "tubearchivist" {
+  name            = "tubearchivist"
+  deployment_type = "standalone"
+  method          = "string"
+  endpoint_id     = var.mediacenter_endpoint_id
+
+  stack_file_content = templatefile("${path.module}/compose-files/tubearchivist.yaml.tpl", {
+    tubearchivist_version    = var.tubearchivist_version
+    tubearchivist_es_version = var.tubearchivist_es_version
+    redis_version            = var.redis_version
+    domain_name              = var.domain_name
+    docker_timezone          = var.docker_timezone
+    docker_user_puid         = var.docker_user_puid
+    docker_user_pgid         = var.docker_user_pgid
+    docker_config_path       = var.config_path
+    docker_media_path        = var.media_path
+    mediacenter_tailscale_ip = var.mediacenter_tailscale_ip
+    tubearchivist_username   = var.tubearchivist_username
+    tubearchivist_password   = var.tubearchivist_password
+    elastic_password         = var.elastic_password
+  })
+}

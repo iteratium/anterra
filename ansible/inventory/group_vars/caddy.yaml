@@ -27,6 +27,8 @@ internal_reverse_proxy_records:
     upstream: "http://mediacenter.tailb3a7a.ts.net:5055"
   - domain: files.{{ domain_name }}
     upstream: "http://mediacenter.tailb3a7a.ts.net:8334"
+  - domain: youtube.{{ domain_name }}
+    upstream: "http://mediacenter.tailb3a7a.ts.net:8335"
 
 external_reverse_proxy_records:
   - domain: jellyfin.{{ domain_name }}

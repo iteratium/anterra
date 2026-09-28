@@ -12,6 +12,7 @@ locals {
     "kdash",
     "seerr",
     "files",
+    "youtube",
   ])
 
   vps_tailnet_services = toset([
