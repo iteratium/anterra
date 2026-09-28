@@ -76,6 +76,42 @@ variable "rclone_version" {
   default     = "1.75"
 }
 
+variable "tubearchivist_version" {
+  type        = string
+  description = "Tube Archivist image tag, pinned because releases can require an ES bump or index migration"
+  default     = "v0.5.12"
+}
+
+variable "tubearchivist_es_version" {
+  type        = string
+  description = "Tube Archivist Elasticsearch image tag, pinned to the version the Tube Archivist release expects"
+  default     = "8.19.0"
+}
+
+variable "redis_version" {
+  type        = string
+  description = "Redis image tag for Tube Archivist, major-floating so Watchtower applies 8.x updates"
+  default     = "8-alpine"
+}
+
+variable "tubearchivist_username" {
+  type        = string
+  description = "Tube Archivist initial admin username"
+  default     = "admin"
+}
+
+variable "tubearchivist_password" {
+  type        = string
+  description = "Tube Archivist initial admin password"
+  sensitive   = true
+}
+
+variable "elastic_password" {
+  type        = string
+  description = "Elasticsearch password, shared by tubearchivist and archivist-es"
+  sensitive   = true
+}
+
 variable "cloudflare_edge_ranges" {
   type        = list(string)
   description = "Cloudflare edge IP ranges, stripped from X-Forwarded-For so ntfy sees the real client IP. Source: cloudflare.com/ips-v4 and ips-v6"

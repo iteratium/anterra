@@ -17,6 +17,7 @@
       - profilarr
       - flaresolverr
       - seerr
+      - tubearchivist
       - gluetun
     owned_trees:
       - /mnt/fast-store/app-data
@@ -69,6 +70,7 @@
       loop:
         - movies
         - tv
+        - youtube
 
     - name: Set ownership on the storage trees
       ansible.builtin.file:

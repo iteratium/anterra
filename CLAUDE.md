@@ -124,3 +124,5 @@ All secrets stored exclusively on Github Secrets
 | `VPS_TAILSCALE_IP` | vps Tailscale IP — karakeep-web bind address |
 | `KARAKEEP_NEXTAUTH_SECRET` | Karakeep `NEXTAUTH_SECRET` — session JWT signing |
 | `MEILI_MASTER_KEY` | Meilisearch master key — shared by the karakeep-backend and karakeep-web stacks |
+| `TUBEARCHIVIST_PASSWORD` | Tube Archivist initial admin password |
+| `ELASTIC_PASSWORD` | Tube Archivist Elasticsearch password — shared by tubearchivist and archivist-es |
