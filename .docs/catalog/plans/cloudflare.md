@@ -46,6 +46,6 @@ the locals as services are added.
 - `BASE_DOMAIN` — base domain for record names (shared with Ansible).
 - `RPI_TAILSCALE_IP` — internal A-record target.
 - `VPS_PUBLIC_IP` — external A-record target.
-- `LAPTOP_LAN_IP` — LAN-only A-record target (`rdp`).
+- `LAPTOP_LAN_IP` — LAN-only A-record target (`n8n`).
 
 Wired as `TF_VAR_*` in `terraform-apply.yml` and `terraform-plan.yml`.

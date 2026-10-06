@@ -20,7 +20,7 @@ locals {
   ])
 
   lan_services = toset([
-    "rdp",
+    "n8n",
   ])
 
   external_services = {
